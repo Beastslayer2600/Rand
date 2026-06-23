@@ -1,0 +1,31 @@
+# Unreal Engine generated folders
+Binaries/
+Build/
+DerivedDataCache/
+Intermediate/
+Saved/
+.vs/
+.vscode/
+.idea/
+
+# Generated solution / project files
+*.sln
+*.slnx
+.vsconfig
+*.suo
+*.opensdf
+*.sdf
+*.VC.db
+*.VC.opendb
+*.xcodeproj
+*.xcworkspace
+
+# Claude Code local (machine-specific) settings
+.claude/settings.local.json
+
+# Stray pre-existing standalone repo (separate GitHub clone — not part of this project)
+/Rand/
+
+# OS noise
+Thumbs.db
+.DS_Store
