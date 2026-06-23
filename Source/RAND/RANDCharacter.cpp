@@ -4,7 +4,10 @@
 
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Engine/SkeletalMesh.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "UObject/ConstructorHelpers.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 
@@ -35,6 +38,18 @@ ARANDCharacter::ARANDCharacter()
 	Movement->BrakingDecelerationWalking = 1500.0f;
 	Movement->JumpZVelocity = 420.0f;
 	Movement->AirControl = 0.2f;
+
+	// Placeholder visual: the engine "Manny" mannequin so movement is visible
+	// during play-tests. André's real look is a MetaHuman (per GDD) — this is
+	// a throwaway stand-in in reference pose (no locomotion anims yet).
+	GetMesh()->SetRelativeLocation(FVector(0.0f, 0.0f, -90.0f));
+	GetMesh()->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
+	static ConstructorHelpers::FObjectFinder<USkeletalMesh> PlaceholderMesh(
+		TEXT("/MoverExamples/Characters/Mannequins/Meshes/SKM_Manny_Simple.SKM_Manny_Simple"));
+	if (PlaceholderMesh.Succeeded())
+	{
+		GetMesh()->SetSkeletalMeshAsset(PlaceholderMesh.Object);
+	}
 
 	// Camera boom: trails behind André and collides with world geometry.
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
