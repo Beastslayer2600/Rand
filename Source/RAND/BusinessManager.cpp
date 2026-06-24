@@ -2,6 +2,7 @@
 
 #include "BusinessManager.h"
 #include "EconomyComponent.h"
+#include "TimeComponent.h"
 
 #include "GameFramework/Actor.h"
 #include "TimerManager.h"
@@ -23,17 +24,32 @@ void URANDBusinessManager::BeginPlay()
 		Wanted = Owner->FindComponentByClass<UWantedComponent>();
 	}
 
-	// Drive accrual on a fixed real-time cadence, each tick = one game-minute.
-	if (UWorld* World = GetWorld())
+	// Prefer the authoritative game clock: accrue one slice per in-game minute.
+	Time = URANDTimeComponent::Get(this);
+	if (URANDTimeComponent* Clock = Time.Get())
 	{
+		Clock->OnMinutePassed.AddDynamic(this, &URANDBusinessManager::HandleGameMinute);
+	}
+	else if (UWorld* World = GetWorld())
+	{
+		// No clock in this world — fall back to a private real-time timer.
 		const float Interval = FMath::Max(0.01f, RealSecondsPerGameMinute);
 		World->GetTimerManager().SetTimer(AccrualTimer, this,
 			&URANDBusinessManager::TickPassiveIncome, Interval, /*bLoop=*/true);
 	}
 }
 
+void URANDBusinessManager::HandleGameMinute(int32 /*Day*/, int32 /*Hour*/, int32 /*Minute*/)
+{
+	TickPassiveIncome();
+}
+
 void URANDBusinessManager::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	if (URANDTimeComponent* Clock = Time.Get())
+	{
+		Clock->OnMinutePassed.RemoveDynamic(this, &URANDBusinessManager::HandleGameMinute);
+	}
 	if (UWorld* World = GetWorld())
 	{
 		World->GetTimerManager().ClearTimer(AccrualTimer);

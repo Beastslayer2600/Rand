@@ -8,6 +8,7 @@
 #include "BusinessManager.generated.h"
 
 class URANDEconomyComponent;
+class URANDTimeComponent;
 
 /**
  * Where a business sits on the legality spectrum — drives heat and income.
@@ -71,7 +72,11 @@ public:
 
 	// --- Configuration ------------------------------------------------------
 
-	/** Real-world seconds that represent one in-game minute. Drives the accrual timer. */
+	/**
+	 * Fallback cadence (real seconds per in-game minute) used only when no
+	 * URANDTimeComponent clock is present. When the game clock exists, accrual
+	 * is driven by its OnMinutePassed and this value is ignored.
+	 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Business|Time")
 	float RealSecondsPerGameMinute = 1.0f;
 
@@ -114,6 +119,12 @@ private:
 
 	TWeakObjectPtr<URANDEconomyComponent> Economy;
 	TWeakObjectPtr<UWantedComponent> Wanted;
+	TWeakObjectPtr<URANDTimeComponent> Time;
 
+	/** Fallback timer, used only when there is no game clock to subscribe to. */
 	FTimerHandle AccrualTimer;
+
+	/** Bound to the clock's OnMinutePassed; forwards to TickPassiveIncome. */
+	UFUNCTION()
+	void HandleGameMinute(int32 Day, int32 Hour, int32 Minute);
 };

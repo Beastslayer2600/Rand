@@ -4,6 +4,7 @@
 #include "RANDCharacter.h"
 #include "HealthComponent.h"
 #include "InteractionComponent.h"
+#include "TimeComponent.h"
 
 #include "Blueprint/WidgetTree.h"
 #include "Components/CanvasPanel.h"
@@ -165,6 +166,19 @@ TSharedRef<SWidget> URANDHUDWidget::RebuildWidget()
 		PromptCanvasSlot->SetAlignment(FVector2D(0.5f, 1.0f));
 		PromptCanvasSlot->SetPosition(FVector2D(0.0f, -120.0f));
 		PromptCanvasSlot->SetAutoSize(true);
+
+		// --- Clock (top-right): "Day 1 - 14:32" ----------------------------
+		TimeText = WidgetTree->ConstructWidget<UTextBlock>(
+			UTextBlock::StaticClass(), TEXT("TimeText"));
+		TimeText->SetText(FText::GetEmpty());
+		TimeText->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+		TimeText->SetJustification(ETextJustify::Right);
+
+		UCanvasPanelSlot* TimeCanvasSlot = Root->AddChildToCanvas(TimeText);
+		TimeCanvasSlot->SetAnchors(FAnchors(1.0f, 0.0f));
+		TimeCanvasSlot->SetAlignment(FVector2D(1.0f, 0.0f));
+		TimeCanvasSlot->SetPosition(FVector2D(-40.0f, 40.0f));
+		TimeCanvasSlot->SetAutoSize(true);
 	}
 
 	return Super::RebuildWidget();
@@ -194,6 +208,13 @@ void URANDHUDWidget::BindToCharacter(ARANDCharacter* Character)
 		Wanted->OnHeatChanged.AddDynamic(this, &URANDHUDWidget::HandleHeatChanged);
 	}
 
+	// The clock lives on the game mode, not the character.
+	BoundTime = URANDTimeComponent::Get(this);
+	if (URANDTimeComponent* Clock = BoundTime.Get())
+	{
+		Clock->OnMinutePassed.AddDynamic(this, &URANDHUDWidget::HandleMinutePassed);
+	}
+
 	RefreshAll();
 }
 
@@ -210,6 +231,10 @@ void URANDHUDWidget::NativeDestruct()
 	if (UWantedComponent* Wanted = BoundWanted.Get())
 	{
 		Wanted->OnHeatChanged.RemoveDynamic(this, &URANDHUDWidget::HandleHeatChanged);
+	}
+	if (URANDTimeComponent* Clock = BoundTime.Get())
+	{
+		Clock->OnMinutePassed.RemoveDynamic(this, &URANDHUDWidget::HandleMinutePassed);
 	}
 
 	Super::NativeDestruct();
@@ -234,6 +259,11 @@ void URANDHUDWidget::RefreshAll()
 	if (UInteractionComponent* Interaction = BoundInteraction.Get())
 	{
 		HandleTargetChanged(Interaction->GetCurrentTarget());
+	}
+
+	if (URANDTimeComponent* Clock = BoundTime.Get())
+	{
+		HandleMinutePassed(Clock->GetCurrentDay(), Clock->GetCurrentHour(), Clock->GetCurrentMinute());
 	}
 }
 
@@ -288,5 +318,16 @@ void URANDHUDWidget::HandleTargetChanged(AActor* NewTarget)
 	{
 		InteractionText->SetText(FText::GetEmpty());
 		InteractionText->SetVisibility(ESlateVisibility::Collapsed);
+	}
+}
+
+void URANDHUDWidget::HandleMinutePassed(int32 /*Day*/, int32 /*Hour*/, int32 /*Minute*/)
+{
+	if (TimeText)
+	{
+		if (URANDTimeComponent* Clock = BoundTime.Get())
+		{
+			TimeText->SetText(FText::FromString(Clock->GetTimeString()));
+		}
 	}
 }

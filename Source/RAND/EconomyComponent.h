@@ -6,6 +6,8 @@
 #include "Components/ActorComponent.h"
 #include "EconomyComponent.generated.h"
 
+class URANDTimeComponent;
+
 /**
  * FRANDTransaction — a single ledger entry in André's finances. Credits are
  * money in (tender payouts, business income); debits are money out (bribes,
@@ -24,9 +26,15 @@ struct FRANDTransaction
 	UPROPERTY(BlueprintReadOnly, Category = "Economy")
 	FString Source;
 
-	/** When the transaction was recorded. */
+	// In-game time the transaction was recorded (from URANDTimeComponent).
 	UPROPERTY(BlueprintReadOnly, Category = "Economy")
-	FDateTime Timestamp;
+	int32 Day = 0;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Economy")
+	int32 Hour = 0;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Economy")
+	int32 Minute = 0;
 
 	/** True for money in (credit), false for money out (debit). */
 	UPROPERTY(BlueprintReadOnly, Category = "Economy")
@@ -99,6 +107,9 @@ private:
 	UPROPERTY()
 	TArray<FRANDTransaction> TransactionLog;
 
-	/** Appends a ledger entry. */
+	/** Session clock, resolved at BeginPlay; ledger entries are stamped from it. */
+	TWeakObjectPtr<URANDTimeComponent> Time;
+
+	/** Appends a ledger entry, stamped with the current in-game time. */
 	void RecordTransaction(float Amount, const FString& Source, bool bIsCredit);
 };

@@ -1,6 +1,7 @@
 // Copyright Fortitudo Studio. All Rights Reserved.
 
 #include "EconomyComponent.h"
+#include "TimeComponent.h"
 
 URANDEconomyComponent::URANDEconomyComponent()
 {
@@ -12,6 +13,7 @@ void URANDEconomyComponent::BeginPlay()
 	Super::BeginPlay();
 
 	Balance = StartingBalance;
+	Time = URANDTimeComponent::Get(this);
 }
 
 void URANDEconomyComponent::AddFunds(float Amount, const FString& Source)
@@ -48,6 +50,13 @@ void URANDEconomyComponent::RecordTransaction(float Amount, const FString& Sourc
 	FRANDTransaction& Entry = TransactionLog.AddDefaulted_GetRef();
 	Entry.Amount = Amount;
 	Entry.Source = Source;
-	Entry.Timestamp = FDateTime::Now();
 	Entry.bIsCredit = bIsCredit;
+
+	// Stamp with in-game time; leaves 0/0/0 if the clock isn't available.
+	if (URANDTimeComponent* Clock = Time.Get())
+	{
+		Entry.Day = Clock->GetCurrentDay();
+		Entry.Hour = Clock->GetCurrentHour();
+		Entry.Minute = Clock->GetCurrentMinute();
+	}
 }

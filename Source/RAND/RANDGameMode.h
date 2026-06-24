@@ -6,6 +6,8 @@
 #include "GameFramework/GameModeBase.h"
 #include "RANDGameMode.generated.h"
 
+class URANDTimeComponent;
+
 /**
  * ARANDGameMode — default rules for RAND. Spawns André (ARANDCharacter) as
  * the player pawn. Single-player; expands later with save/load and the
@@ -18,4 +20,12 @@ class RAND_API ARANDGameMode : public AGameModeBase
 
 public:
 	ARANDGameMode();
+
+	UFUNCTION(BlueprintPure, Category = "Time")
+	URANDTimeComponent* GetTimeComponent() const { return TimeComponent; }
+
+private:
+	/** Authoritative in-game clock for the session. */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Time", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<URANDTimeComponent> TimeComponent;
 };

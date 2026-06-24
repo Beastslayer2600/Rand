@@ -10,6 +10,7 @@
 class ARANDCharacter;
 class UHealthComponent;
 class UInteractionComponent;
+class URANDTimeComponent;
 class UProgressBar;
 class UTextBlock;
 
@@ -56,6 +57,9 @@ protected:
 	UPROPERTY()
 	TObjectPtr<UTextBlock> InteractionText;
 
+	UPROPERTY()
+	TObjectPtr<UTextBlock> TimeText;
+
 	/** Index order matches EAgency: 0 SAPS, 1 Hawks, 2 Rivals. */
 	UPROPERTY()
 	TArray<TObjectPtr<UProgressBar>> HeatBars;
@@ -71,6 +75,7 @@ private:
 	TWeakObjectPtr<UHealthComponent> BoundHealth;
 	TWeakObjectPtr<UInteractionComponent> BoundInteraction;
 	TWeakObjectPtr<UWantedComponent> BoundWanted;
+	TWeakObjectPtr<URANDTimeComponent> BoundTime;
 
 	/** Builds one "Name [bar] Level" row and registers its widgets. */
 	class UHorizontalBox* BuildHeatRow(int32 AgencyIdx, const TCHAR* DisplayName, const FLinearColor& Color);
@@ -85,6 +90,9 @@ private:
 
 	UFUNCTION()
 	void HandleTargetChanged(AActor* NewTarget);
+
+	UFUNCTION()
+	void HandleMinutePassed(int32 Day, int32 Hour, int32 Minute);
 
 	/** Pushes current values into the widgets (used on initial bind). */
 	void RefreshAll();
