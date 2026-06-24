@@ -85,6 +85,28 @@ void URANDTimeComponent::AdvanceMinute()
 	}
 }
 
+void URANDTimeComponent::SetPaused(bool bNewPaused)
+{
+	if (bPaused == bNewPaused)
+	{
+		return;
+	}
+	bPaused = bNewPaused;
+
+	if (UWorld* World = GetWorld())
+	{
+		FTimerManager& TimerManager = World->GetTimerManager();
+		if (bPaused)
+		{
+			TimerManager.PauseTimer(TickTimer);
+		}
+		else
+		{
+			TimerManager.UnPauseTimer(TickTimer);
+		}
+	}
+}
+
 ETimeOfDay URANDTimeComponent::GetTimeOfDay() const
 {
 	if (CurrentHour >= 5 && CurrentHour <= 6)   return ETimeOfDay::Dawn;

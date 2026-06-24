@@ -76,6 +76,13 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Time")
 	FString GetTimeString() const;
 
+	/** Halt/resume advancement of game time (e.g. paused during dialogue). */
+	UFUNCTION(BlueprintCallable, Category = "Time")
+	void SetPaused(bool bNewPaused);
+
+	UFUNCTION(BlueprintPure, Category = "Time")
+	bool IsPaused() const { return bPaused; }
+
 	// --- Delegates ----------------------------------------------------------
 
 	UPROPERTY(BlueprintAssignable, Category = "Time")
@@ -100,6 +107,9 @@ private:
 
 	UPROPERTY()
 	int32 CurrentMinute = 0;
+
+	/** When true the tick timer is paused and game time is frozen. */
+	bool bPaused = false;
 
 	FTimerHandle TickTimer;
 
