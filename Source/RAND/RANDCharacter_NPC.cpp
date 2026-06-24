@@ -11,9 +11,18 @@
 #include "UObject/ConstructorHelpers.h"
 #include "Kismet/GameplayStatics.h"
 
+#if WITH_EDITOR
+#include "DrawDebugHelpers.h"
+#endif
+
 ARANDCharacter_NPC::ARANDCharacter_NPC()
 {
+	// Tick only runs in editor builds, purely to draw the debug name/language.
+#if WITH_EDITOR
+	PrimaryActorTick.bCanEverTick = true;
+#else
 	PrimaryActorTick.bCanEverTick = false;
+#endif
 
 	DialogueComponent = CreateDefaultSubobject<URANDDialogueComponent>(TEXT("DialogueComponent"));
 
@@ -29,6 +38,21 @@ ARANDCharacter_NPC::ARANDCharacter_NPC()
 		GetMesh()->SetSkeletalMeshAsset(PlaceholderMesh.Object);
 	}
 }
+
+#if WITH_EDITOR
+void ARANDCharacter_NPC::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	const FString DisplayName = NPCName.IsEmpty() ? FString(TEXT("(unnamed)")) : NPCName;
+	const FString LangName = StaticEnum<ELanguageGroup>()
+		->GetDisplayNameTextByValue(static_cast<int64>(LanguageGroup)).ToString();
+
+	DrawDebugString(GetWorld(), GetActorLocation() + FVector(0.0f, 0.0f, 120.0f),
+		FString::Printf(TEXT("%s\n%s"), *DisplayName, *LangName),
+		nullptr, FColor::White, 0.0f, true);
+}
+#endif
 
 // --- IInteractable ----------------------------------------------------------
 

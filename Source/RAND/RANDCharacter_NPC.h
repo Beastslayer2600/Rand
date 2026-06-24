@@ -41,6 +41,11 @@ class RAND_API ARANDCharacter_NPC : public ACharacter, public IInteractable
 public:
 	ARANDCharacter_NPC();
 
+#if WITH_EDITOR
+	/** Draws NPCName + LanguageGroup above the head for debugging (editor only). */
+	virtual void Tick(float DeltaSeconds) override;
+#endif
+
 	// --- IInteractable ------------------------------------------------------
 
 	virtual FText GetInteractionPrompt_Implementation() const override;
