@@ -19,9 +19,11 @@ class UTextBlock;
  * setup). Equivalent to a designer's "WBP_HUD" but constructed in RebuildWidget.
  *
  * Three elements:
- *   - Heat indicator: three bars (SAPS, Hawks, Rivals), each filled to the
- *     agency's current EHeatLevel bucket (None..Burned).
- *   - Health bar: bound to UHealthComponent::OnHealthChanged.
+ *   - Heat indicator: three rows (SAPS, Hawks, Rivals), each a name label, a
+ *     bar filled to the agency's EHeatLevel bucket, and the bucket's name
+ *     (None/Noticed/Wanted/Manhunt/Burned). Driven by OnHeatChanged.
+ *   - Health bar: a bar with a numeric "cur/max" overlay, bound to
+ *     UHealthComponent::OnHealthChanged.
  *   - Interaction prompt: shows the active IInteractable's prompt while
  *     UInteractionComponent has a CurrentTarget; hidden when there is none.
  */
@@ -36,6 +38,9 @@ public:
 	/** Subscribes the HUD to a character's health/heat/interaction systems. */
 	void BindToCharacter(ARANDCharacter* Character);
 
+	/** Human-readable name for a heat bucket, used by the heat rows. */
+	static FText HeatLevelToText(EHeatLevel Level);
+
 protected:
 	virtual TSharedRef<SWidget> RebuildWidget() override;
 	virtual void NativeDestruct() override;
@@ -46,11 +51,18 @@ protected:
 	TObjectPtr<UProgressBar> HealthBar;
 
 	UPROPERTY()
+	TObjectPtr<UTextBlock> HealthText;
+
+	UPROPERTY()
 	TObjectPtr<UTextBlock> InteractionText;
 
 	/** Index order matches EAgency: 0 SAPS, 1 Hawks, 2 Rivals. */
 	UPROPERTY()
 	TArray<TObjectPtr<UProgressBar>> HeatBars;
+
+	/** Per-agency level name ("None".."Burned"), index-aligned with HeatBars. */
+	UPROPERTY()
+	TArray<TObjectPtr<UTextBlock>> HeatLevelTexts;
 
 private:
 	static constexpr int32 AgencyCount = 3;
@@ -59,6 +71,9 @@ private:
 	TWeakObjectPtr<UHealthComponent> BoundHealth;
 	TWeakObjectPtr<UInteractionComponent> BoundInteraction;
 	TWeakObjectPtr<UWantedComponent> BoundWanted;
+
+	/** Builds one "Name [bar] Level" row and registers its widgets. */
+	class UHorizontalBox* BuildHeatRow(int32 AgencyIdx, const TCHAR* DisplayName, const FLinearColor& Color);
 
 	// --- Delegate handlers --------------------------------------------------
 

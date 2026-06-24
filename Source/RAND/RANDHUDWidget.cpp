@@ -10,12 +10,80 @@
 #include "Components/CanvasPanelSlot.h"
 #include "Components/VerticalBox.h"
 #include "Components/VerticalBoxSlot.h"
+#include "Components/HorizontalBox.h"
+#include "Components/HorizontalBoxSlot.h"
+#include "Components/Overlay.h"
+#include "Components/OverlaySlot.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
+
+namespace
+{
+	// Shared look for HUD labels.
+	const FLinearColor LabelColor(0.92f, 0.92f, 0.92f);
+}
 
 URANDHUDWidget::URANDHUDWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
+}
+
+FText URANDHUDWidget::HeatLevelToText(EHeatLevel Level)
+{
+	switch (Level)
+	{
+	case EHeatLevel::Noticed: return NSLOCTEXT("RANDHUD", "Heat_Noticed", "Noticed");
+	case EHeatLevel::Wanted:  return NSLOCTEXT("RANDHUD", "Heat_Wanted",  "Wanted");
+	case EHeatLevel::Manhunt: return NSLOCTEXT("RANDHUD", "Heat_Manhunt", "Manhunt");
+	case EHeatLevel::Burned:  return NSLOCTEXT("RANDHUD", "Heat_Burned",  "Burned");
+	case EHeatLevel::None:
+	default:                  return NSLOCTEXT("RANDHUD", "Heat_None",    "None");
+	}
+}
+
+UHorizontalBox* URANDHUDWidget::BuildHeatRow(int32 AgencyIdx, const TCHAR* DisplayName, const FLinearColor& Color)
+{
+	UHorizontalBox* Row = WidgetTree->ConstructWidget<UHorizontalBox>(
+		UHorizontalBox::StaticClass(), *FString::Printf(TEXT("HeatRow_%s"), DisplayName));
+
+	// Agency name (fixed width so the bars line up).
+	UTextBlock* NameLabel = WidgetTree->ConstructWidget<UTextBlock>(
+		UTextBlock::StaticClass(), *FString::Printf(TEXT("HeatName_%s"), DisplayName));
+	NameLabel->SetText(FText::FromString(DisplayName));
+	NameLabel->SetColorAndOpacity(FSlateColor(LabelColor));
+	NameLabel->SetMinDesiredWidth(64.0f);
+	if (UHorizontalBoxSlot* NameSlot = Row->AddChildToHorizontalBox(NameLabel))
+	{
+		NameSlot->SetVerticalAlignment(VAlign_Center);
+		NameSlot->SetPadding(FMargin(0.0f, 0.0f, 6.0f, 0.0f));
+	}
+
+	// The bar — stretches to fill the row.
+	UProgressBar* Bar = WidgetTree->ConstructWidget<UProgressBar>(
+		UProgressBar::StaticClass(), *FString::Printf(TEXT("HeatBar_%s"), DisplayName));
+	Bar->SetFillColorAndOpacity(Color);
+	Bar->SetPercent(0.0f);
+	HeatBars[AgencyIdx] = Bar;
+	if (UHorizontalBoxSlot* BarSlot = Row->AddChildToHorizontalBox(Bar))
+	{
+		BarSlot->SetVerticalAlignment(VAlign_Center);
+		BarSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+	}
+
+	// Level name (fixed width, right of the bar).
+	UTextBlock* LevelText = WidgetTree->ConstructWidget<UTextBlock>(
+		UTextBlock::StaticClass(), *FString::Printf(TEXT("HeatLevel_%s"), DisplayName));
+	LevelText->SetText(HeatLevelToText(EHeatLevel::None));
+	LevelText->SetColorAndOpacity(FSlateColor(LabelColor));
+	LevelText->SetMinDesiredWidth(72.0f);
+	HeatLevelTexts[AgencyIdx] = LevelText;
+	if (UHorizontalBoxSlot* LevelSlot = Row->AddChildToHorizontalBox(LevelText))
+	{
+		LevelSlot->SetVerticalAlignment(VAlign_Center);
+		LevelSlot->SetPadding(FMargin(6.0f, 0.0f, 0.0f, 0.0f));
+	}
+
+	return Row;
 }
 
 TSharedRef<SWidget> URANDHUDWidget::RebuildWidget()
@@ -27,10 +95,7 @@ TSharedRef<SWidget> URANDHUDWidget::RebuildWidget()
 			UCanvasPanel::StaticClass(), TEXT("RootCanvas"));
 		WidgetTree->RootWidget = Root;
 
-		// --- Heat indicator (top-left): three stacked agency bars ----------
-		UVerticalBox* HeatBox = WidgetTree->ConstructWidget<UVerticalBox>(
-			UVerticalBox::StaticClass(), TEXT("HeatBox"));
-
+		// --- Heat indicator (top-left): three agency rows ------------------
 		const FLinearColor AgencyColors[AgencyCount] = {
 			FLinearColor(0.10f, 0.35f, 0.90f), // SAPS  — blue
 			FLinearColor(0.85f, 0.65f, 0.10f), // Hawks — gold
@@ -39,44 +104,59 @@ TSharedRef<SWidget> URANDHUDWidget::RebuildWidget()
 		const TCHAR* AgencyNames[AgencyCount] = { TEXT("SAPS"), TEXT("Hawks"), TEXT("Rivals") };
 
 		HeatBars.SetNum(AgencyCount);
+		HeatLevelTexts.SetNum(AgencyCount);
+
+		UVerticalBox* HeatBox = WidgetTree->ConstructWidget<UVerticalBox>(
+			UVerticalBox::StaticClass(), TEXT("HeatBox"));
 		for (int32 i = 0; i < AgencyCount; ++i)
 		{
-			UVerticalBoxSlot* RowSlot = HeatBox->AddChildToVerticalBox(
-				[&]() -> UProgressBar*
-				{
-					UProgressBar* Bar = WidgetTree->ConstructWidget<UProgressBar>(
-						UProgressBar::StaticClass(), *FString::Printf(TEXT("HeatBar_%s"), AgencyNames[i]));
-					Bar->SetFillColorAndOpacity(AgencyColors[i]);
-					Bar->SetPercent(0.0f);
-					HeatBars[i] = Bar;
-					return Bar;
-				}());
-			if (RowSlot)
+			UHorizontalBox* Row = BuildHeatRow(i, AgencyNames[i], AgencyColors[i]);
+			if (UVerticalBoxSlot* RowSlot = HeatBox->AddChildToVerticalBox(Row))
 			{
-				RowSlot->SetPadding(FMargin(0.0f, 2.0f));
+				RowSlot->SetPadding(FMargin(0.0f, 3.0f));
 			}
 		}
 
 		UCanvasPanelSlot* HeatCanvasSlot = Root->AddChildToCanvas(HeatBox);
 		HeatCanvasSlot->SetPosition(FVector2D(40.0f, 40.0f));
-		HeatCanvasSlot->SetSize(FVector2D(220.0f, 80.0f));
+		HeatCanvasSlot->SetSize(FVector2D(280.0f, 96.0f));
 
-		// --- Health bar (bottom-left) --------------------------------------
+		// --- Health bar (bottom-left) with numeric overlay -----------------
+		UOverlay* HealthOverlay = WidgetTree->ConstructWidget<UOverlay>(
+			UOverlay::StaticClass(), TEXT("HealthOverlay"));
+
 		HealthBar = WidgetTree->ConstructWidget<UProgressBar>(
 			UProgressBar::StaticClass(), TEXT("HealthBar"));
 		HealthBar->SetFillColorAndOpacity(FLinearColor(0.15f, 0.75f, 0.20f));
 		HealthBar->SetPercent(1.0f);
+		if (UOverlaySlot* BarSlot = HealthOverlay->AddChildToOverlay(HealthBar))
+		{
+			BarSlot->SetHorizontalAlignment(HAlign_Fill);
+			BarSlot->SetVerticalAlignment(VAlign_Fill);
+		}
 
-		UCanvasPanelSlot* HealthCanvasSlot = Root->AddChildToCanvas(HealthBar);
+		HealthText = WidgetTree->ConstructWidget<UTextBlock>(
+			UTextBlock::StaticClass(), TEXT("HealthText"));
+		HealthText->SetText(FText::GetEmpty());
+		HealthText->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+		HealthText->SetJustification(ETextJustify::Center);
+		if (UOverlaySlot* TextSlot = HealthOverlay->AddChildToOverlay(HealthText))
+		{
+			TextSlot->SetHorizontalAlignment(HAlign_Center);
+			TextSlot->SetVerticalAlignment(VAlign_Center);
+		}
+
+		UCanvasPanelSlot* HealthCanvasSlot = Root->AddChildToCanvas(HealthOverlay);
 		HealthCanvasSlot->SetAnchors(FAnchors(0.0f, 1.0f));
 		HealthCanvasSlot->SetAlignment(FVector2D(0.0f, 1.0f));
 		HealthCanvasSlot->SetPosition(FVector2D(40.0f, -40.0f));
-		HealthCanvasSlot->SetSize(FVector2D(300.0f, 24.0f));
+		HealthCanvasSlot->SetSize(FVector2D(300.0f, 26.0f));
 
 		// --- Interaction prompt (bottom-center) ----------------------------
 		InteractionText = WidgetTree->ConstructWidget<UTextBlock>(
 			UTextBlock::StaticClass(), TEXT("InteractionText"));
 		InteractionText->SetText(FText::GetEmpty());
+		InteractionText->SetColorAndOpacity(FSlateColor(FLinearColor::White));
 		InteractionText->SetJustification(ETextJustify::Center);
 		InteractionText->SetVisibility(ESlateVisibility::Collapsed);
 
@@ -139,10 +219,7 @@ void URANDHUDWidget::RefreshAll()
 {
 	if (UHealthComponent* Health = BoundHealth.Get())
 	{
-		if (HealthBar)
-		{
-			HealthBar->SetPercent(Health->GetHealthPercent());
-		}
+		HandleHealthChanged(Health->GetHealth(), 0.0f);
 	}
 
 	if (UWantedComponent* Wanted = BoundWanted.Get())
@@ -164,12 +241,20 @@ void URANDHUDWidget::RefreshAll()
 
 void URANDHUDWidget::HandleHealthChanged(float /*NewHealth*/, float /*Delta*/)
 {
+	UHealthComponent* Health = BoundHealth.Get();
+	if (!Health)
+	{
+		return;
+	}
+
 	if (HealthBar)
 	{
-		if (UHealthComponent* Health = BoundHealth.Get())
-		{
-			HealthBar->SetPercent(Health->GetHealthPercent());
-		}
+		HealthBar->SetPercent(Health->GetHealthPercent());
+	}
+	if (HealthText)
+	{
+		HealthText->SetText(FText::FromString(FString::Printf(TEXT("%d / %d"),
+			FMath::RoundToInt(Health->GetHealth()), FMath::RoundToInt(Health->GetMaxHealth()))));
 	}
 }
 
@@ -180,6 +265,10 @@ void URANDHUDWidget::HandleHeatChanged(EAgency Agency, EHeatLevel /*OldLevel*/, 
 	{
 		const float Fraction = static_cast<float>(NewLevel) / static_cast<float>(MaxHeatLevel);
 		HeatBars[Idx]->SetPercent(Fraction);
+	}
+	if (HeatLevelTexts.IsValidIndex(Idx) && HeatLevelTexts[Idx])
+	{
+		HeatLevelTexts[Idx]->SetText(HeatLevelToText(NewLevel));
 	}
 }
 
