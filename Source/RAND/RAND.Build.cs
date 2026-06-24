@@ -15,7 +15,10 @@ public class RAND : ModuleRules
 			"Engine",
 			"InputCore",
 			"EnhancedInput",
-			"ChaosVehicles"
+			"ChaosVehicles",
+			"UMG",
+			"Slate",
+			"SlateCore"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
