@@ -14,7 +14,8 @@ public class RAND : ModuleRules
 			"CoreUObject",
 			"Engine",
 			"InputCore",
-			"EnhancedInput"
+			"EnhancedInput",
+			"ChaosVehicles"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });

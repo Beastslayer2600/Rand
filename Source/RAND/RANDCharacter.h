@@ -32,6 +32,16 @@ class RAND_API ARANDCharacter : public ACharacter
 public:
 	ARANDCharacter();
 
+	/** Accessors for the gameplay systems André owns. */
+	UFUNCTION(BlueprintPure, Category = "Wanted")
+	UWantedComponent* GetWantedComponent() const { return WantedComponent; }
+
+	UFUNCTION(BlueprintPure, Category = "Health")
+	UHealthComponent* GetHealthComponent() const { return HealthComponent; }
+
+	UFUNCTION(BlueprintPure, Category = "Interaction")
+	UInteractionComponent* GetInteractionComponent() const { return InteractionComponent; }
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
