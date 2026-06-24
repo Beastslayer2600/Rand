@@ -14,6 +14,8 @@ struct FInputActionValue;
 class UInteractionComponent;
 class UHealthComponent;
 class UWantedComponent;
+class URANDEconomyComponent;
+class URANDBusinessManager;
 
 /**
  * ARANDCharacter — André Venter, the player-controlled protagonist.
@@ -41,6 +43,12 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Interaction")
 	UInteractionComponent* GetInteractionComponent() const { return InteractionComponent; }
+
+	UFUNCTION(BlueprintPure, Category = "Economy")
+	URANDEconomyComponent* GetEconomyComponent() const { return EconomyComponent; }
+
+	UFUNCTION(BlueprintPure, Category = "Business")
+	URANDBusinessManager* GetBusinessManager() const { return BusinessManager; }
 
 protected:
 	virtual void BeginPlay() override;
@@ -94,6 +102,12 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Wanted", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UWantedComponent> WantedComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Economy", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<URANDEconomyComponent> EconomyComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Business", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<URANDBusinessManager> BusinessManager;
 
 	// --- Input handlers -------------------------------------------------
 

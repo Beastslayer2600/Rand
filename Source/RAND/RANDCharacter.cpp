@@ -14,6 +14,8 @@
 #include "InteractionComponent.h"
 #include "HealthComponent.h"
 #include "WantedComponent.h"
+#include "EconomyComponent.h"
+#include "BusinessManager.h"
 
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
@@ -84,6 +86,8 @@ ARANDCharacter::ARANDCharacter()
 	InteractionComponent = CreateDefaultSubobject<UInteractionComponent>(TEXT("InteractionComponent"));
 	HealthComponent      = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComponent"));
 	WantedComponent      = CreateDefaultSubobject<UWantedComponent>(TEXT("WantedComponent"));
+	EconomyComponent     = CreateDefaultSubobject<URANDEconomyComponent>(TEXT("EconomyComponent"));
+	BusinessManager      = CreateDefaultSubobject<URANDBusinessManager>(TEXT("BusinessManager"));
 }
 
 void ARANDCharacter::ConfigureInputMappings()
