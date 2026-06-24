@@ -5,7 +5,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "IInteractable.h"
-#include "WantedComponent.h" // EAgency
+#include "WantedComponent.h"      // EAgency
+#include "RANDLanguageTypes.h"    // ELanguageGroup, EDistrict, ESituationType
 #include "RANDCharacter_NPC.generated.h"
 
 class URANDDialogueComponent;
@@ -53,6 +54,23 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "NPC")
 	ENPCType NPCType = ENPCType::Civilian;
+
+	/** Home language; selects which colloquial reaction lines this NPC uses. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "NPC")
+	ELanguageGroup LanguageGroup = ELanguageGroup::English;
+
+	// --- Language / reactions ----------------------------------------------
+
+	/**
+	 * Assigns this NPC a home language by weighted-random draw from a district's
+	 * profile. Call at spawn time to place the NPC in its neighbourhood's mix.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "NPC|Language")
+	void AssignLanguageFromDistrict(EDistrict District);
+
+	/** A random colloquial line for the given situation in this NPC's language. */
+	UFUNCTION(BlueprintCallable, Category = "NPC|Language")
+	FText GetReactionLine(ESituationType Situation) const;
 
 	// --- Witnessing ---------------------------------------------------------
 

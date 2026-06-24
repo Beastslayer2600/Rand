@@ -3,8 +3,12 @@
 #include "RANDCharacter_NPC.h"
 #include "RANDCharacter.h"
 #include "DialogueComponent.h"
+#include "RANDDialogueBank.h"
 #include "WantedComponent.h"
 
+#include "Components/SkeletalMeshComponent.h"
+#include "Engine/SkeletalMesh.h"
+#include "UObject/ConstructorHelpers.h"
 #include "Kismet/GameplayStatics.h"
 
 ARANDCharacter_NPC::ARANDCharacter_NPC()
@@ -12,6 +16,18 @@ ARANDCharacter_NPC::ARANDCharacter_NPC()
 	PrimaryActorTick.bCanEverTick = false;
 
 	DialogueComponent = CreateDefaultSubobject<URANDDialogueComponent>(TEXT("DialogueComponent"));
+
+	// Placeholder visual: the engine "Manny" mannequin so NPCs are visible in
+	// test scenes (same stand-in the player uses). Real NPCs are MetaHumans;
+	// subclasses/Blueprints override the mesh.
+	GetMesh()->SetRelativeLocation(FVector(0.0f, 0.0f, -90.0f));
+	GetMesh()->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
+	static ConstructorHelpers::FObjectFinder<USkeletalMesh> PlaceholderMesh(
+		TEXT("/MoverExamples/Characters/Mannequins/Meshes/SKM_Manny_Simple.SKM_Manny_Simple"));
+	if (PlaceholderMesh.Succeeded())
+	{
+		GetMesh()->SetSkeletalMeshAsset(PlaceholderMesh.Object);
+	}
 }
 
 // --- IInteractable ----------------------------------------------------------
@@ -36,6 +52,18 @@ bool ARANDCharacter_NPC::CanInteract_Implementation(const AActor* /*Interactor*/
 	// already mid-dialogue with this NPC.
 	return DialogueComponent && DialogueComponent->HasDialogue()
 		&& !DialogueComponent->IsDialogueActive();
+}
+
+// --- Language / reactions ---------------------------------------------------
+
+void ARANDCharacter_NPC::AssignLanguageFromDistrict(EDistrict District)
+{
+	LanguageGroup = URANDDialogueBank::Get()->PickLanguageForDistrict(District);
+}
+
+FText ARANDCharacter_NPC::GetReactionLine(ESituationType Situation) const
+{
+	return URANDDialogueBank::Get()->GetRandomLine(LanguageGroup, Situation);
 }
 
 // --- Witnessing -------------------------------------------------------------
