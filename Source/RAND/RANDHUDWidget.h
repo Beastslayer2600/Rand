@@ -11,8 +11,10 @@ class ARANDCharacter;
 class UHealthComponent;
 class UInteractionComponent;
 class URANDTimeComponent;
+class URANDMissionManager;
 class UProgressBar;
 class UTextBlock;
+class UVerticalBox;
 
 /**
  * URANDHUDWidget — the in-game HUD, built as a UMG widget entirely in C++ so it
@@ -60,6 +62,10 @@ protected:
 	UPROPERTY()
 	TObjectPtr<UTextBlock> TimeText;
 
+	/** Bottom-right active-mission panel (title + objective lines). */
+	UPROPERTY()
+	TObjectPtr<UVerticalBox> MissionBox;
+
 	/** Index order matches EAgency: 0 SAPS, 1 Hawks, 2 Rivals. */
 	UPROPERTY()
 	TArray<TObjectPtr<UProgressBar>> HeatBars;
@@ -76,6 +82,7 @@ private:
 	TWeakObjectPtr<UInteractionComponent> BoundInteraction;
 	TWeakObjectPtr<UWantedComponent> BoundWanted;
 	TWeakObjectPtr<URANDTimeComponent> BoundTime;
+	TWeakObjectPtr<URANDMissionManager> BoundMissions;
 
 	/** Builds one "Name [bar] Level" row and registers its widgets. */
 	class UHorizontalBox* BuildHeatRow(int32 AgencyIdx, const TCHAR* DisplayName, const FLinearColor& Color);
@@ -93,6 +100,21 @@ private:
 
 	UFUNCTION()
 	void HandleMinutePassed(int32 Day, int32 Hour, int32 Minute);
+
+	UFUNCTION()
+	void HandleMissionStarted(FName MissionID);
+
+	UFUNCTION()
+	void HandleObjectiveComplete(FName MissionID, int32 ObjectiveIndex);
+
+	UFUNCTION()
+	void HandleMissionComplete(FName MissionID);
+
+	UFUNCTION()
+	void HandleMissionFailed(FName MissionID);
+
+	/** Rebuilds the bottom-right mission panel from the active mission. */
+	void UpdateMissionDisplay();
 
 	/** Pushes current values into the widgets (used on initial bind). */
 	void RefreshAll();

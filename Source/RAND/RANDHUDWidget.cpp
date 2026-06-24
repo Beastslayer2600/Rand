@@ -5,6 +5,7 @@
 #include "HealthComponent.h"
 #include "InteractionComponent.h"
 #include "TimeComponent.h"
+#include "RANDMissionManager.h"
 
 #include "Blueprint/WidgetTree.h"
 #include "Components/CanvasPanel.h"
@@ -179,6 +180,17 @@ TSharedRef<SWidget> URANDHUDWidget::RebuildWidget()
 		TimeCanvasSlot->SetAlignment(FVector2D(1.0f, 0.0f));
 		TimeCanvasSlot->SetPosition(FVector2D(-40.0f, 40.0f));
 		TimeCanvasSlot->SetAutoSize(true);
+
+		// --- Active mission (bottom-right) ---------------------------------
+		MissionBox = WidgetTree->ConstructWidget<UVerticalBox>(
+			UVerticalBox::StaticClass(), TEXT("MissionBox"));
+		MissionBox->SetVisibility(ESlateVisibility::Collapsed);
+
+		UCanvasPanelSlot* MissionCanvasSlot = Root->AddChildToCanvas(MissionBox);
+		MissionCanvasSlot->SetAnchors(FAnchors(1.0f, 1.0f));
+		MissionCanvasSlot->SetAlignment(FVector2D(1.0f, 1.0f));
+		MissionCanvasSlot->SetPosition(FVector2D(-40.0f, -40.0f));
+		MissionCanvasSlot->SetAutoSize(true);
 	}
 
 	return Super::RebuildWidget();
@@ -208,11 +220,20 @@ void URANDHUDWidget::BindToCharacter(ARANDCharacter* Character)
 		Wanted->OnHeatChanged.AddDynamic(this, &URANDHUDWidget::HandleHeatChanged);
 	}
 
-	// The clock lives on the game mode, not the character.
+	// The clock and missions live on the game mode, not the character.
 	BoundTime = URANDTimeComponent::Get(this);
 	if (URANDTimeComponent* Clock = BoundTime.Get())
 	{
 		Clock->OnMinutePassed.AddDynamic(this, &URANDHUDWidget::HandleMinutePassed);
+	}
+
+	BoundMissions = URANDMissionManager::Get(this);
+	if (URANDMissionManager* Missions = BoundMissions.Get())
+	{
+		Missions->OnMissionStarted.AddDynamic(this, &URANDHUDWidget::HandleMissionStarted);
+		Missions->OnObjectiveComplete.AddDynamic(this, &URANDHUDWidget::HandleObjectiveComplete);
+		Missions->OnMissionComplete.AddDynamic(this, &URANDHUDWidget::HandleMissionComplete);
+		Missions->OnMissionFailed.AddDynamic(this, &URANDHUDWidget::HandleMissionFailed);
 	}
 
 	RefreshAll();
@@ -235,6 +256,13 @@ void URANDHUDWidget::NativeDestruct()
 	if (URANDTimeComponent* Clock = BoundTime.Get())
 	{
 		Clock->OnMinutePassed.RemoveDynamic(this, &URANDHUDWidget::HandleMinutePassed);
+	}
+	if (URANDMissionManager* Missions = BoundMissions.Get())
+	{
+		Missions->OnMissionStarted.RemoveDynamic(this, &URANDHUDWidget::HandleMissionStarted);
+		Missions->OnObjectiveComplete.RemoveDynamic(this, &URANDHUDWidget::HandleObjectiveComplete);
+		Missions->OnMissionComplete.RemoveDynamic(this, &URANDHUDWidget::HandleMissionComplete);
+		Missions->OnMissionFailed.RemoveDynamic(this, &URANDHUDWidget::HandleMissionFailed);
 	}
 
 	Super::NativeDestruct();
@@ -265,6 +293,8 @@ void URANDHUDWidget::RefreshAll()
 	{
 		HandleMinutePassed(Clock->GetCurrentDay(), Clock->GetCurrentHour(), Clock->GetCurrentMinute());
 	}
+
+	UpdateMissionDisplay();
 }
 
 // --- Delegate handlers ------------------------------------------------------
@@ -329,5 +359,52 @@ void URANDHUDWidget::HandleMinutePassed(int32 /*Day*/, int32 /*Hour*/, int32 /*M
 		{
 			TimeText->SetText(FText::FromString(Clock->GetTimeString()));
 		}
+	}
+}
+
+// --- Mission display --------------------------------------------------------
+
+void URANDHUDWidget::HandleMissionStarted(FName /*MissionID*/)        { UpdateMissionDisplay(); }
+void URANDHUDWidget::HandleObjectiveComplete(FName /*MissionID*/, int32 /*Index*/) { UpdateMissionDisplay(); }
+void URANDHUDWidget::HandleMissionComplete(FName /*MissionID*/)       { UpdateMissionDisplay(); }
+void URANDHUDWidget::HandleMissionFailed(FName /*MissionID*/)         { UpdateMissionDisplay(); }
+
+void URANDHUDWidget::UpdateMissionDisplay()
+{
+	if (!MissionBox)
+	{
+		return;
+	}
+
+	MissionBox->ClearChildren();
+
+	FRANDMission Mission;
+	URANDMissionManager* Missions = BoundMissions.Get();
+	if (!Missions || !Missions->GetActiveMission(Mission))
+	{
+		MissionBox->SetVisibility(ESlateVisibility::Collapsed);
+		return;
+	}
+
+	MissionBox->SetVisibility(ESlateVisibility::HitTestInvisible);
+
+	// Title.
+	UTextBlock* Title = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
+	Title->SetText(Mission.MissionName);
+	Title->SetColorAndOpacity(FSlateColor(FLinearColor(1.0f, 0.85f, 0.30f)));
+	Title->SetJustification(ETextJustify::Right);
+	MissionBox->AddChildToVerticalBox(Title);
+
+	// Objectives, each with a tick box and an "(optional)" suffix.
+	for (const FRANDObjective& Objective : Mission.Objectives)
+	{
+		UTextBlock* Line = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
+		const FString Box = Objective.bIsComplete ? TEXT("[x] ") : TEXT("[ ] ");
+		const FString Optional = Objective.bIsOptional ? TEXT("  (optional)") : TEXT("");
+		Line->SetText(FText::FromString(Box + Objective.ObjectiveText.ToString() + Optional));
+		Line->SetColorAndOpacity(FSlateColor(
+			Objective.bIsComplete ? FLinearColor(0.55f, 0.85f, 0.55f) : LabelColor));
+		Line->SetJustification(ETextJustify::Right);
+		MissionBox->AddChildToVerticalBox(Line);
 	}
 }

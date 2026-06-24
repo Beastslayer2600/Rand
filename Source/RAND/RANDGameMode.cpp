@@ -5,6 +5,7 @@
 #include "RANDHUD.h"
 #include "TimeComponent.h"
 #include "RANDSaveGameManager.h"
+#include "RANDMissionManager.h"
 
 ARANDGameMode::ARANDGameMode()
 {
@@ -20,4 +21,7 @@ ARANDGameMode::ARANDGameMode()
 
 	// Save/load: F5 manual save and an hourly auto-save.
 	SaveManager = CreateDefaultSubobject<URANDSaveGameManager>(TEXT("SaveManager"));
+
+	// Mission registry + flow.
+	MissionManager = CreateDefaultSubobject<URANDMissionManager>(TEXT("MissionManager"));
 }

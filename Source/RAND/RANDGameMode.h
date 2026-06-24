@@ -8,6 +8,7 @@
 
 class URANDTimeComponent;
 class URANDSaveGameManager;
+class URANDMissionManager;
 
 /**
  * ARANDGameMode — default rules for RAND. Spawns André (ARANDCharacter) as
@@ -28,6 +29,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Save")
 	URANDSaveGameManager* GetSaveManager() const { return SaveManager; }
 
+	UFUNCTION(BlueprintPure, Category = "Mission")
+	URANDMissionManager* GetMissionManager() const { return MissionManager; }
+
 private:
 	/** Authoritative in-game clock for the session. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Time", meta = (AllowPrivateAccess = "true"))
@@ -36,4 +40,8 @@ private:
 	/** Save/load for the session (F5 + hourly auto-save). */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Save", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<URANDSaveGameManager> SaveManager;
+
+	/** Mission registry + flow for the session. */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mission", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<URANDMissionManager> MissionManager;
 };
