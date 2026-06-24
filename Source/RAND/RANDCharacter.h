@@ -11,6 +11,9 @@ class UCameraComponent;
 class UInputMappingContext;
 class UInputAction;
 struct FInputActionValue;
+class UInteractionComponent;
+class UHealthComponent;
+class UWantedComponent;
 
 /**
  * ARANDCharacter — André Venter, the player-controlled protagonist.
@@ -70,6 +73,17 @@ protected:
 	/** Ground speed while sprinting (cm/s). */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement", meta = (AllowPrivateAccess = "true"))
 	float SprintSpeed = 650.0f;
+
+	// --- Systems --------------------------------------------------------
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Interaction", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInteractionComponent> InteractionComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Health", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UHealthComponent> HealthComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Wanted", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UWantedComponent> WantedComponent;
 
 	// --- Input handlers -------------------------------------------------
 

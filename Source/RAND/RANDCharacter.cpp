@@ -11,6 +11,10 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 
+#include "InteractionComponent.h"
+#include "HealthComponent.h"
+#include "WantedComponent.h"
+
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputMappingContext.h"
@@ -76,6 +80,10 @@ ARANDCharacter::ARANDCharacter()
 
 	SprintAction = CreateDefaultSubobject<UInputAction>(TEXT("IA_Sprint"));
 	SprintAction->ValueType = EInputActionValueType::Boolean;
+
+	InteractionComponent = CreateDefaultSubobject<UInteractionComponent>(TEXT("InteractionComponent"));
+	HealthComponent      = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComponent"));
+	WantedComponent      = CreateDefaultSubobject<UWantedComponent>(TEXT("WantedComponent"));
 }
 
 void ARANDCharacter::ConfigureInputMappings()
