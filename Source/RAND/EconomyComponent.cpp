@@ -45,6 +45,14 @@ bool URANDEconomyComponent::DeductFunds(float Amount, const FString& Reason)
 	return true;
 }
 
+void URANDEconomyComponent::LoadState(float InBalance, const TArray<FRANDTransaction>& InLog)
+{
+	const float OldBalance = Balance;
+	Balance = InBalance;
+	TransactionLog = InLog;
+	OnBalanceChanged.Broadcast(Balance, Balance - OldBalance);
+}
+
 void URANDEconomyComponent::RecordTransaction(float Amount, const FString& Source, bool bIsCredit)
 {
 	FRANDTransaction& Entry = TransactionLog.AddDefaulted_GetRef();

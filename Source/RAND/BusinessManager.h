@@ -98,6 +98,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Business")
 	const TArray<FRANDBusiness>& GetBusinesses() const { return Businesses; }
 
+	/** Replaces the whole portfolio (used by save/load). */
+	void SetBusinesses(const TArray<FRANDBusiness>& InBusinesses) { Businesses = InBusinesses; }
+
 	/** Sum of PassiveIncomePerHour across active businesses (ZAR/hour). */
 	UFUNCTION(BlueprintPure, Category = "Business")
 	float GetTotalPassiveIncomePerHour() const;

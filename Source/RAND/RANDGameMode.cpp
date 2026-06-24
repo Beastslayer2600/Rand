@@ -4,6 +4,7 @@
 #include "RANDCharacter.h"
 #include "RANDHUD.h"
 #include "TimeComponent.h"
+#include "RANDSaveGameManager.h"
 
 ARANDGameMode::ARANDGameMode()
 {
@@ -16,4 +17,7 @@ ARANDGameMode::ARANDGameMode()
 	// Authoritative session clock; economy, business accrual, and the HUD all
 	// read game time from here rather than running their own timers.
 	TimeComponent = CreateDefaultSubobject<URANDTimeComponent>(TEXT("TimeComponent"));
+
+	// Save/load: F5 manual save and an hourly auto-save.
+	SaveManager = CreateDefaultSubobject<URANDSaveGameManager>(TEXT("SaveManager"));
 }

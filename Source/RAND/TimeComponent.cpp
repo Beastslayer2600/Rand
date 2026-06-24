@@ -85,6 +85,14 @@ void URANDTimeComponent::AdvanceMinute()
 	}
 }
 
+void URANDTimeComponent::SetTime(int32 Day, int32 Hour, int32 Minute)
+{
+	CurrentDay = FMath::Max(1, Day);
+	CurrentHour = FMath::Clamp(Hour, 0, 23);
+	CurrentMinute = FMath::Clamp(Minute, 0, 59);
+	OnMinutePassed.Broadcast(CurrentDay, CurrentHour, CurrentMinute);
+}
+
 void URANDTimeComponent::SetPaused(bool bNewPaused)
 {
 	if (bPaused == bNewPaused)

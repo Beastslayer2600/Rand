@@ -91,6 +91,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Economy")
 	bool DeductFunds(float Amount, const FString& Reason);
 
+	/** Restores balance and ledger from a save; broadcasts OnBalanceChanged. */
+	void LoadState(float InBalance, const TArray<FRANDTransaction>& InLog);
+
 	// --- Delegates ----------------------------------------------------------
 
 	/** Fired on every balance change. Delta is positive for credits, negative for debits. */

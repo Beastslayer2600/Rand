@@ -76,6 +76,10 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Time")
 	FString GetTimeString() const;
 
+	/** Sets the clock directly (used by save/load); broadcasts OnMinutePassed. */
+	UFUNCTION(BlueprintCallable, Category = "Time")
+	void SetTime(int32 Day, int32 Hour, int32 Minute);
+
 	/** Halt/resume advancement of game time (e.g. paused during dialogue). */
 	UFUNCTION(BlueprintCallable, Category = "Time")
 	void SetPaused(bool bNewPaused);
