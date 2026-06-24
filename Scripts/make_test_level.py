@@ -1,10 +1,11 @@
-# Builds a minimal test level for verifying André's movement.
+# Builds a minimal test level for verifying André's movement and NPC spawning.
 # Run headless:
 #   UnrealEditor-Cmd.exe RAND.uproject -ExecutePythonScript="Scripts/make_test_level.py"
 #
-# Creates a flat 50m x 50m floor, a PlayerStart, and Joburg-afternoon lighting.
-# The world game mode comes from GlobalDefaultGameMode (ARANDGameMode) set in
-# DefaultEngine.ini, so PIE spawns André automatically.
+# Creates a flat 50m x 50m floor, a PlayerStart, Joburg-afternoon lighting, and
+# two NPC spawners (Hillbrow + Marshalltown, 5 NPCs each). The world game mode
+# comes from GlobalDefaultGameMode (ARANDGameMode) set in DefaultEngine.ini, so
+# PIE spawns André automatically; the spawners populate NPCs on BeginPlay.
 
 import unreal
 
@@ -48,6 +49,23 @@ if sun_comp:
 spawn_class(unreal.SkyAtmosphere).set_actor_label("SkyAtmosphere")
 spawn_class(unreal.SkyLight, (0.0, 0.0, 300.0)).set_actor_label("SkyLight")
 spawn_class(unreal.ExponentialHeightFog, (0.0, 0.0, 200.0)).set_actor_label("HeightFog")
+
+
+def spawn_npc_spawner(label, district, location, count=5, radius=500.0):
+    """Place an ARANDNPCSpawner; it populates NPCs at runtime (PIE), not now."""
+    spawner = spawn_class(unreal.RANDNPCSpawner, location)
+    spawner.set_actor_label(label)
+    spawner.set_editor_property("district", district)
+    spawner.set_editor_property("npc_class", unreal.RANDCharacter_NPC)
+    spawner.set_editor_property("spawn_count", count)
+    spawner.set_editor_property("spawn_radius", radius)
+    return spawner
+
+
+# Two district spawners on opposite sides of the box, raised so the NPC capsules
+# sit above the floor (capsule half-height ~96).
+spawn_npc_spawner("Spawner_Hillbrow", unreal.EDistrict.HILLBROW, (-1000.0, 0.0, 120.0))
+spawn_npc_spawner("Spawner_Marshalltown", unreal.EDistrict.MARSHALL_TOWN, (1000.0, 0.0, 120.0))
 
 # Persist the level to disk.
 saved = level_sub.save_current_level()
