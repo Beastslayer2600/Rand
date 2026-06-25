@@ -29,6 +29,12 @@ floor = actor_sub.spawn_actor_from_object(plane_mesh, unreal.Vector(0.0, 0.0, 0.
 floor.set_actor_label("Floor")
 floor.set_actor_scale3d(unreal.Vector(50.0, 50.0, 1.0))
 
+# NavMesh bounds so ambient NPC patrol (ARANDNPCAIController) can path. Default
+# NavMeshBoundsVolume is a 200cm cube; scale it to cover the 50m floor.
+navbounds = spawn_class(unreal.NavMeshBoundsVolume, (0.0, 0.0, 250.0))
+navbounds.set_actor_label("NavMeshBounds")
+navbounds.set_actor_scale3d(unreal.Vector(30.0, 30.0, 5.0))
+
 # Spawn André just above the floor (capsule half-height ~96).
 player_start = spawn_class(unreal.PlayerStart, (0.0, 0.0, 120.0))
 player_start.set_actor_label("PlayerStart")

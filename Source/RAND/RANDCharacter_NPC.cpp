@@ -4,6 +4,7 @@
 #include "RANDCharacter.h"
 #include "DialogueComponent.h"
 #include "RANDDialogueBank.h"
+#include "RANDNPCAIController.h"
 #include "WantedComponent.h"
 
 #include "Components/SkeletalMeshComponent.h"
@@ -25,6 +26,10 @@ ARANDCharacter_NPC::ARANDCharacter_NPC()
 #endif
 
 	DialogueComponent = CreateDefaultSubobject<URANDDialogueComponent>(TEXT("DialogueComponent"));
+
+	// Ambient AI: spawn/possess our controller for placed and spawned NPCs.
+	AIControllerClass = ARANDNPCAIController::StaticClass();
+	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 
 	// Placeholder visual: the engine "Manny" mannequin so NPCs are visible in
 	// test scenes (same stand-in the player uses). Real NPCs are MetaHumans;
