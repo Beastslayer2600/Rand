@@ -78,6 +78,24 @@ spawn_npc_spawner("Spawner_Marshalltown", unreal.EDistrict.MARSHALL_TOWN, (1000.
 mission = spawn_class(unreal.RANDMission_Consultation, (1400.0, 0.0, 100.0))
 mission.set_actor_label("Mission_Consultation")
 
+
+def spawn_property(label, name, ptype, price, rent, location):
+    """Place an ARANDProperty the player can buy (R<price>)."""
+    prop = spawn_class(unreal.RANDProperty, location)
+    prop.set_actor_label(label)
+    prop.set_editor_property("property_name", name)
+    prop.set_editor_property("property_type", ptype)
+    prop.set_editor_property("purchase_price", price)
+    prop.set_editor_property("monthly_rental_income", rent)
+    return prop
+
+
+# A couple of buyable properties for testing purchase + minimap gold dots.
+spawn_property("Prop_HillbrowFlats", "Hillbrow Flats",
+               unreal.EPropertyType.RESIDENTIAL, 250000.0, 8000.0, (-700.0, 600.0, 200.0))
+spawn_property("Prop_MarshallWarehouse", "Marshalltown Warehouse",
+               unreal.EPropertyType.INDUSTRIAL, 600000.0, 22000.0, (700.0, 600.0, 200.0))
+
 # Persist the level to disk.
 saved = level_sub.save_current_level()
 unreal.log("RAND: test level build complete (%s), saved=%s" % (MAP_PACKAGE, saved))
