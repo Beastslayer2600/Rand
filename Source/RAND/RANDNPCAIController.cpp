@@ -82,7 +82,10 @@ void ARANDNPCAIController::SetupBlackboard(const FVector& Home)
 	AddKey(Key_CrimeWitnessed, UBlackboardKeyType_Bool::StaticClass());
 	AddKey(Key_DistanceToPlayer, UBlackboardKeyType_Float::StaticClass());
 
-	UseBlackboard(BlackboardAsset, BlackboardComp);
+	// UseBlackboard wants a raw pointer reference; bind through a local.
+	UBlackboardComponent* BB = nullptr;
+	UseBlackboard(BlackboardAsset, BB);
+	BlackboardComp = BB;
 
 	if (BlackboardComp)
 	{
@@ -90,7 +93,7 @@ void ARANDNPCAIController::SetupBlackboard(const FVector& Home)
 		BlackboardComp->SetValueAsFloat(Key_PatrolRadius, PatrolRadius);
 		BlackboardComp->SetValueAsBool(Key_PlayerNearby, false);
 		BlackboardComp->SetValueAsBool(Key_CrimeWitnessed, false);
-		BlackboardComp->SetValueAsFloat(Key_DistanceToPlayer, BIG_NUMBER);
+		BlackboardComp->SetValueAsFloat(Key_DistanceToPlayer, FLT_MAX);
 	}
 }
 

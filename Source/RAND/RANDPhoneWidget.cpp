@@ -75,13 +75,13 @@ TSharedRef<SWidget> URANDPhoneWidget::RebuildWidget()
 			OSlot->SetPadding(FMargin(0.0f, 8.0f, 0.0f, 0.0f));
 		}
 
+		// Fixed-size panel hugging the top-right corner (unambiguous: a point
+		// anchor + alignment, no stretch).
 		UCanvasPanelSlot* FrameSlot = Root->AddChildToCanvas(Frame);
-		FrameSlot->SetAnchors(FAnchors(1.0f, 0.0f, 1.0f, 1.0f)); // right edge, full height
-		FrameSlot->SetOffsets(FMargin(0.0f)); // anchors define the rect
+		FrameSlot->SetAnchors(FAnchors(1.0f, 0.0f));
 		FrameSlot->SetAlignment(FVector2D(1.0f, 0.0f));
-		// Fixed width panel hugging the right edge.
-		FrameSlot->SetPosition(FVector2D(-380.0f, 0.0f));
-		FrameSlot->SetSize(FVector2D(380.0f, 0.0f));
+		FrameSlot->SetPosition(FVector2D(0.0f, 0.0f));
+		FrameSlot->SetSize(FVector2D(380.0f, 720.0f));
 	}
 
 	// Start hidden; ARANDHUD/Tab opens it.
