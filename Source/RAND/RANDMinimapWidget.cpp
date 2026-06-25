@@ -83,9 +83,9 @@ UImage* URANDMinimapWidget::AcquireDot(int32 Index)
 	{
 		UImage* NewDot = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass());
 		StyleDot(NewDot, NPCColor);
-		if (UCanvasPanelSlot* Slot = Canvas->AddChildToCanvas(NewDot))
+		if (UCanvasPanelSlot* DotSlot = Canvas->AddChildToCanvas(NewDot))
 		{
-			Slot->SetSize(FVector2D(DotSize, DotSize));
+			DotSlot->SetSize(FVector2D(DotSize, DotSize));
 		}
 		DotPool.Add(NewDot);
 	}

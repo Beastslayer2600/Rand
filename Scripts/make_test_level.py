@@ -109,9 +109,9 @@ def spawn_property(label, name, ptype, price, rent, location):
 
 # A couple of buyable properties for testing purchase + minimap gold dots.
 spawn_property("Prop_HillbrowFlats", "Hillbrow Flats",
-               unreal.EPropertyType.RESIDENTIAL, 250000.0, 8000.0, (-700.0, 600.0, 200.0))
+               unreal.ERANDPropertyType.RESIDENTIAL, 250000.0, 8000.0, (-700.0, 600.0, 200.0))
 spawn_property("Prop_MarshallWarehouse", "Marshalltown Warehouse",
-               unreal.EPropertyType.INDUSTRIAL, 600000.0, 22000.0, (700.0, 600.0, 200.0))
+               unreal.ERANDPropertyType.INDUSTRIAL, 600000.0, 22000.0, (700.0, 600.0, 200.0))
 
 # ---------------------------------------------------------------------------
 # Marshalltown city block (+X side). Placeholder geometry now; swap in City

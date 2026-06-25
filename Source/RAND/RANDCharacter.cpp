@@ -6,6 +6,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Engine/SkeletalMesh.h"
+#include "Animation/AnimInstance.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "UObject/ConstructorHelpers.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -55,6 +56,16 @@ ARANDCharacter::ARANDCharacter()
 	if (PlaceholderMesh.Succeeded())
 	{
 		GetMesh()->SetSkeletalMeshAsset(PlaceholderMesh.Object);
+	}
+
+	// Default Manny locomotion (idle/walk/run/jump). This is the engine's
+	// stock mannequin AnimBP; André's bespoke animation comes much later.
+	static ConstructorHelpers::FClassFinder<UAnimInstance> LocomotionABP(
+		TEXT("/MoverExamples/Characters/Mannequins/Animations/ABP_Manny.ABP_Manny_C"));
+	if (LocomotionABP.Succeeded())
+	{
+		GetMesh()->SetAnimationMode(EAnimationMode::AnimationBlueprint);
+		GetMesh()->SetAnimInstanceClass(LocomotionABP.Class);
 	}
 
 	// Camera boom: trails behind André and collides with world geometry.

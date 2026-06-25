@@ -11,7 +11,7 @@ class UStaticMeshComponent;
 
 /** Broad category of a buyable property. */
 UENUM(BlueprintType)
-enum class EPropertyType : uint8
+enum class ERANDPropertyType : uint8
 {
 	Residential	UMETA(DisplayName = "Residential"),
 	Commercial	UMETA(DisplayName = "Commercial"),
@@ -49,7 +49,7 @@ public:
 	FString PropertyName = TEXT("Unnamed Property");
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Property")
-	EPropertyType PropertyType = EPropertyType::Residential;
+	ERANDPropertyType PropertyType = ERANDPropertyType::Residential;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Property")
 	float PurchasePrice = 250000.0f;

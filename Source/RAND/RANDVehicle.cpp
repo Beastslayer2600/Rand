@@ -46,15 +46,15 @@ void ARANDVehicle::OnInteract_Implementation(AActor* Interactor)
 		return;
 	}
 
-	AController* Controller = Character->GetController();
-	if (!Controller)
+	AController* EnteringController = Character->GetController();
+	if (!EnteringController)
 	{
 		return;
 	}
 
 	// Remember who was driving André so we can hand control back on exit.
 	DriverCharacter = Character;
-	SavedController = Controller;
+	SavedController = EnteringController;
 
 	// Theft: entering an unowned vehicle is grand theft auto.
 	if (!bOwned)
@@ -68,16 +68,16 @@ void ARANDVehicle::OnInteract_Implementation(AActor* Interactor)
 	// Park André: hide him and take him out of the world while he's seated.
 	Character->GetMesh()->SetVisibility(false, /*bPropagateToChildren=*/true);
 	Character->SetActorEnableCollision(false);
-	Character->DisableInput(Cast<APlayerController>(Controller));
+	Character->DisableInput(Cast<APlayerController>(EnteringController));
 
 	// Possess the vehicle with André's controller.
-	Controller->Possess(this);
+	EnteringController->Possess(this);
 
 	// Build the exit key mapping for whoever is now driving.
 	VehicleMappingContext->UnmapAll();
 	VehicleMappingContext->MapKey(ExitAction, EKeys::F);
 
-	if (APlayerController* PC = Cast<APlayerController>(Controller))
+	if (APlayerController* PC = Cast<APlayerController>(EnteringController))
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
 			ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer()))
@@ -106,10 +106,10 @@ void ARANDVehicle::ExitVehicle()
 		return;
 	}
 
-	AController* Controller = SavedController;
+	AController* ExitingController = SavedController;
 
 	// Tear down the exit mapping context.
-	if (APlayerController* PC = Cast<APlayerController>(Controller))
+	if (APlayerController* PC = Cast<APlayerController>(ExitingController))
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
 			ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer()))
@@ -119,8 +119,8 @@ void ARANDVehicle::ExitVehicle()
 	}
 
 	// Hand the controller back to André.
-	Controller->UnPossess();
-	Controller->Possess(DriverCharacter);
+	ExitingController->UnPossess();
+	ExitingController->Possess(DriverCharacter);
 
 	// Drop André at the driver door, in world space.
 	const FVector DropLocation = GetActorTransform().TransformPosition(DriverDoorOffset);
@@ -129,7 +129,7 @@ void ARANDVehicle::ExitVehicle()
 	// Restore André.
 	DriverCharacter->GetMesh()->SetVisibility(true, /*bPropagateToChildren=*/true);
 	DriverCharacter->SetActorEnableCollision(true);
-	DriverCharacter->EnableInput(Cast<APlayerController>(Controller));
+	DriverCharacter->EnableInput(Cast<APlayerController>(ExitingController));
 
 	DriverCharacter = nullptr;
 	SavedController = nullptr;

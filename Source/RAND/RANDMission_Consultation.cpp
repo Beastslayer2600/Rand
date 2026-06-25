@@ -74,7 +74,7 @@ void ARANDMission_Consultation::BeginPlay()
 
 	// Thandi — the official handing out the tender. Afrikaans, per the GDD.
 	const TSubclassOf<ARANDCharacter_NPC> ThandiToSpawn =
-		ThandiClass ? ThandiClass : ARANDCharacter_NPC::StaticClass();
+		ThandiClass ? ThandiClass : TSubclassOf<ARANDCharacter_NPC>(ARANDCharacter_NPC::StaticClass());
 	Thandi = World->SpawnActor<ARANDCharacter_NPC>(ThandiToSpawn,
 		GetActorTransform().TransformPosition(ThandiSpawnOffset), FRotator::ZeroRotator, Params);
 	if (Thandi)
@@ -91,7 +91,7 @@ void ARANDMission_Consultation::BeginPlay()
 
 	// Tender desk — inert until André has spoken to Thandi.
 	const TSubclassOf<ARANDTenderDesk> DeskToSpawn =
-		DeskClass ? DeskClass : ARANDTenderDesk::StaticClass();
+		DeskClass ? DeskClass : TSubclassOf<ARANDTenderDesk>(ARANDTenderDesk::StaticClass());
 	Desk = World->SpawnActor<ARANDTenderDesk>(DeskToSpawn,
 		GetActorTransform().TransformPosition(DeskSpawnOffset), FRotator::ZeroRotator, Params);
 	if (Desk)

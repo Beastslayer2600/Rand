@@ -10,10 +10,10 @@ ARANDDistrictVolume::ARANDDistrictVolume()
 {
 	// Query-only overlap so the brush can be tested against NPC positions
 	// without participating in physics.
-	if (UBrushComponent* Brush = GetBrushComponent())
+	if (UBrushComponent* BrushComp = GetBrushComponent())
 	{
-		Brush->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-		Brush->SetCollisionResponseToAllChannels(ECR_Overlap);
+		BrushComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+		BrushComp->SetCollisionResponseToAllChannels(ECR_Overlap);
 	}
 }
 

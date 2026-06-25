@@ -227,9 +227,9 @@ void URANDPhoneWidget::RebuildMessageList()
 		Stamp->SetColorAndOpacity(FSlateColor(FLinearColor(0.55f, 0.55f, 0.55f)));
 		Bubble->AddChildToVerticalBox(Stamp);
 
-		if (UPanelSlot* Slot = MessageList->AddChild(Bubble))
+		if (UPanelSlot* BubbleSlot = MessageList->AddChild(Bubble))
 		{
-			if (UScrollBoxSlot* ScrollSlot = Cast<UScrollBoxSlot>(Slot))
+			if (UScrollBoxSlot* ScrollSlot = Cast<UScrollBoxSlot>(BubbleSlot))
 			{
 				ScrollSlot->SetPadding(FMargin(0.0f, 0.0f, 0.0f, 10.0f));
 			}
@@ -270,9 +270,9 @@ void URANDPhoneWidget::RebuildOptions()
 		default: break;
 		}
 
-		if (UVerticalBoxSlot* Slot = OptionBox->AddChildToVerticalBox(Button))
+		if (UVerticalBoxSlot* ButtonSlot = OptionBox->AddChildToVerticalBox(Button))
 		{
-			Slot->SetPadding(FMargin(0.0f, 4.0f, 0.0f, 0.0f));
+			ButtonSlot->SetPadding(FMargin(0.0f, 4.0f, 0.0f, 0.0f));
 		}
 	}
 }
