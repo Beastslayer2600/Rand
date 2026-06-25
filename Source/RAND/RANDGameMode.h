@@ -9,6 +9,7 @@
 class URANDTimeComponent;
 class URANDSaveGameManager;
 class URANDMissionManager;
+class URANDWeatherComponent;
 
 /**
  * ARANDGameMode — default rules for RAND. Spawns André (ARANDCharacter) as
@@ -32,6 +33,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Mission")
 	URANDMissionManager* GetMissionManager() const { return MissionManager; }
 
+	UFUNCTION(BlueprintPure, Category = "Weather")
+	URANDWeatherComponent* GetWeatherComponent() const { return WeatherComponent; }
+
 private:
 	/** Authoritative in-game clock for the session. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Time", meta = (AllowPrivateAccess = "true"))
@@ -44,4 +48,8 @@ private:
 	/** Mission registry + flow for the session. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mission", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<URANDMissionManager> MissionManager;
+
+	/** Weather + load shedding, driven off the game clock. */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weather", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<URANDWeatherComponent> WeatherComponent;
 };

@@ -6,6 +6,7 @@
 #include "TimeComponent.h"
 #include "RANDSaveGameManager.h"
 #include "RANDMissionManager.h"
+#include "RANDWeatherComponent.h"
 
 ARANDGameMode::ARANDGameMode()
 {
@@ -24,4 +25,7 @@ ARANDGameMode::ARANDGameMode()
 
 	// Mission registry + flow.
 	MissionManager = CreateDefaultSubobject<URANDMissionManager>(TEXT("MissionManager"));
+
+	// Weather + load shedding, driven off the clock.
+	WeatherComponent = CreateDefaultSubobject<URANDWeatherComponent>(TEXT("WeatherComponent"));
 }
