@@ -120,22 +120,24 @@ spawn_property("Prop_MarshallWarehouse", "Marshalltown Warehouse",
 # block always builds.
 # ---------------------------------------------------------------------------
 
-# Point these at real City Sample building meshes once the FAB pack is installed.
+# City Sample building assets.
+#
+# IMPORTANT: City Sample buildings are Packed Level Actor *blueprints* (each
+# assembled from many modular meshes), NOT single static meshes -- so these are
+# Blueprint asset paths and spawn_building loads them as actor classes. The paths
+# below follow the City Sample Buildings FAB pack's default install folder; the
+# exact folder/asset names depend on the pack version and where you added it, so
+# CONFIRM each one in the Content Browser (right-click the building blueprint ->
+# Copy Reference) and paste it here. Any entry that can't be resolved falls back
+# to a placeholder cube, so the block always builds.
 CITY_SAMPLE_BUILDINGS = [
-    # "/Game/CitySample/Buildings/.../SM_BuildingA.SM_BuildingA",
-    # "/Game/CitySample/Buildings/.../SM_BuildingB.SM_BuildingB",
+    "/Game/CitySampleBuildings/Buildings/BP_Building_Medium_01.BP_Building_Medium_01",
+    "/Game/CitySampleBuildings/Buildings/BP_Building_Medium_02.BP_Building_Medium_02",
+    "/Game/CitySampleBuildings/Buildings/BP_Building_Large_01.BP_Building_Large_01",
+    "/Game/CitySampleBuildings/Buildings/BP_Building_Large_02.BP_Building_Large_02",
 ]
 
 cube_mesh = unreal.load_object(None, "/Engine/BasicShapes/Cube.Cube")
-
-
-def load_building_mesh(index):
-    """Returns (mesh, is_placeholder) for building slot `index`."""
-    if index < len(CITY_SAMPLE_BUILDINGS):
-        mesh = unreal.load_object(None, CITY_SAMPLE_BUILDINGS[index])
-        if mesh:
-            return mesh, False
-    return cube_mesh, True
 
 
 def spawn_mesh(label, mesh, location, scale, rotation=None):
@@ -147,12 +149,23 @@ def spawn_mesh(label, mesh, location, scale, rotation=None):
 
 
 def spawn_building(label, index, location_xy):
-    mesh, is_placeholder = load_building_mesh(index)
-    if is_placeholder:
-        # 100cm cube scaled to a ~6x6x18m block, sitting its base on the floor.
-        spawn_mesh(label, mesh, (location_xy[0], location_xy[1], 900.0), (6.0, 6.0, 18.0))
-    else:
-        spawn_mesh(label, mesh, (location_xy[0], location_xy[1], 0.0), (1.0, 1.0, 1.0))
+    """Spawn a City Sample building (Blueprint class or static mesh), else a cube."""
+    x, y = location_xy
+    if index < len(CITY_SAMPLE_BUILDINGS):
+        path = CITY_SAMPLE_BUILDINGS[index]
+        if unreal.EditorAssetLibrary.does_asset_exist(path):
+            asset = unreal.EditorAssetLibrary.load_asset(path)
+            if isinstance(asset, unreal.Blueprint):
+                bp_class = unreal.EditorAssetLibrary.load_blueprint_class(path)
+                if bp_class:
+                    actor = spawn_class(bp_class, (x, y, 0.0))
+                    actor.set_actor_label(label)
+                    return actor
+            elif isinstance(asset, unreal.StaticMesh):
+                return spawn_mesh(label, asset, (x, y, 0.0), (1.0, 1.0, 1.0))
+
+    # Fallback placeholder: 100cm cube scaled to a ~6x6x18m block on the floor.
+    return spawn_mesh(label, cube_mesh, (x, y, 900.0), (6.0, 6.0, 18.0))
 
 
 def spawn_street_light(label, location_xy):
