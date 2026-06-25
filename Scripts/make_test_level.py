@@ -67,6 +67,11 @@ def spawn_npc_spawner(label, district, location, count=5, radius=500.0):
 spawn_npc_spawner("Spawner_Hillbrow", unreal.EDistrict.HILLBROW, (-1000.0, 0.0, 120.0))
 spawn_npc_spawner("Spawner_Marshalltown", unreal.EDistrict.MARSHALL_TOWN, (1000.0, 0.0, 120.0))
 
+# Mission 1 — The Consultation. Placed at the Marshalltown office; it spawns
+# Thandi (Afrikaans Official) and the tender desk, and starts the mission.
+mission = spawn_class(unreal.RANDMission_Consultation, (1400.0, 0.0, 100.0))
+mission.set_actor_label("Mission_Consultation")
+
 # Persist the level to disk.
 saved = level_sub.save_current_level()
 unreal.log("RAND: test level build complete (%s), saved=%s" % (MAP_PACKAGE, saved))

@@ -50,6 +50,12 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Business")
 	URANDBusinessManager* GetBusinessManager() const { return BusinessManager; }
 
+	// --- Story flags --------------------------------------------------------
+
+	/** Set by Mission 1 (The Consultation): did André take the tender bribe? */
+	UPROPERTY(BlueprintReadWrite, Category = "Story")
+	bool bAcceptedBribe = false;
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
