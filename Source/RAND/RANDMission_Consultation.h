@@ -100,6 +100,15 @@ private:
 	UFUNCTION()
 	void HandleTenderSubmitted(AActor* Interactor);
 
+	/** Routes the player's phone reply (accept/decline) back to the mission. */
+	UFUNCTION()
+	void HandlePhoneOption(FName ActionId);
+
 	/** Authors Thandi's short Afrikaans intro conversation. */
 	void SetupThandiDialogue();
+
+	/** Sends the opening mission briefing as a phone message (deferred). */
+	void SendBriefing();
+
+	FTimerHandle BriefingTimer;
 };

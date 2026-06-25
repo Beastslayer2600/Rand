@@ -41,6 +41,9 @@ public:
 	/** Subscribes the HUD to a character's health/heat/interaction systems. */
 	void BindToCharacter(ARANDCharacter* Character);
 
+	/** Shows/hides the unread-message indicator (driven by the phone widget). */
+	void SetPhoneNotification(bool bHasUnread);
+
 	/** Human-readable name for a heat bucket, used by the heat rows. */
 	static FText HeatLevelToText(EHeatLevel Level);
 
@@ -65,6 +68,10 @@ protected:
 	/** Bottom-right active-mission panel (title + objective lines). */
 	UPROPERTY()
 	TObjectPtr<UVerticalBox> MissionBox;
+
+	/** Top-center "new message" indicator. */
+	UPROPERTY()
+	TObjectPtr<UTextBlock> PhoneNotificationText;
 
 	/** Index order matches EAgency: 0 SAPS, 1 Hawks, 2 Rivals. */
 	UPROPERTY()

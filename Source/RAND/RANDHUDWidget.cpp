@@ -191,6 +191,21 @@ TSharedRef<SWidget> URANDHUDWidget::RebuildWidget()
 		MissionCanvasSlot->SetAlignment(FVector2D(1.0f, 1.0f));
 		MissionCanvasSlot->SetPosition(FVector2D(-40.0f, -40.0f));
 		MissionCanvasSlot->SetAutoSize(true);
+
+		// --- Phone notification (top-center) -------------------------------
+		PhoneNotificationText = WidgetTree->ConstructWidget<UTextBlock>(
+			UTextBlock::StaticClass(), TEXT("PhoneNotificationText"));
+		PhoneNotificationText->SetText(
+			NSLOCTEXT("RANDHUD", "NewMessage", "● New message  (Tab)"));
+		PhoneNotificationText->SetColorAndOpacity(FSlateColor(FLinearColor(0.30f, 0.85f, 0.45f)));
+		PhoneNotificationText->SetJustification(ETextJustify::Center);
+		PhoneNotificationText->SetVisibility(ESlateVisibility::Collapsed);
+
+		UCanvasPanelSlot* NotifSlot = Root->AddChildToCanvas(PhoneNotificationText);
+		NotifSlot->SetAnchors(FAnchors(0.5f, 0.0f));
+		NotifSlot->SetAlignment(FVector2D(0.5f, 0.0f));
+		NotifSlot->SetPosition(FVector2D(0.0f, 20.0f));
+		NotifSlot->SetAutoSize(true);
 	}
 
 	return Super::RebuildWidget();
@@ -359,6 +374,15 @@ void URANDHUDWidget::HandleMinutePassed(int32 /*Day*/, int32 /*Hour*/, int32 /*M
 		{
 			TimeText->SetText(FText::FromString(Clock->GetTimeString()));
 		}
+	}
+}
+
+void URANDHUDWidget::SetPhoneNotification(bool bHasUnread)
+{
+	if (PhoneNotificationText)
+	{
+		PhoneNotificationText->SetVisibility(
+			bHasUnread ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 	}
 }
 

@@ -8,10 +8,12 @@
 #include "DialogueComponent.h"
 #include "EconomyComponent.h"
 #include "WantedComponent.h"
+#include "RANDPhoneWidget.h"
 
 #include "Components/SphereComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
+#include "TimerManager.h"
 
 const FName ARANDMission_Consultation::MissionID = FName(TEXT("Mission_Consultation"));
 
@@ -60,6 +62,10 @@ void ARANDMission_Consultation::BeginPlay()
 	{
 		return;
 	}
+
+	// Deliver the opening briefing by phone once the HUD/phone exists.
+	World->GetTimerManager().SetTimer(BriefingTimer, this,
+		&ARANDMission_Consultation::SendBriefing, 0.8f, /*bLoop=*/false);
 
 	FActorSpawnParameters Params;
 	Params.Owner = this;
@@ -178,11 +184,54 @@ void ARANDMission_Consultation::HandleTenderSubmitted(AActor* /*Interactor*/)
 	OfferBribe();
 }
 
+void ARANDMission_Consultation::SendBriefing()
+{
+	if (URANDPhoneWidget* Phone = URANDPhoneWidget::GetPhone(this))
+	{
+		Phone->ReceiveMessage(TEXT("Sipho"),
+			NSLOCTEXT("RANDMission", "Brief_Consultation",
+				"Andre - the Marshalltown tender is ready. Get to the office and see Thandi."));
+	}
+}
+
 void ARANDMission_Consultation::OfferBribe()
 {
-	// The phone system delivers the actual message and routes the player's
-	// Accept/Decline back here; this just records that the offer is live.
 	bBribeOffered = true;
+
+	// Thandi's offer arrives by phone with accept/decline replies that route
+	// back through HandlePhoneOption.
+	URANDPhoneWidget* Phone = URANDPhoneWidget::GetPhone(this);
+	if (!Phone)
+	{
+		return;
+	}
+
+	Phone->OnMessageOptionSelected.AddUniqueDynamic(this, &ARANDMission_Consultation::HandlePhoneOption);
+
+	FRANDMessageOption Accept;
+	Accept.Label = NSLOCTEXT("RANDMission", "Bribe_Accept", "Accept (R85,000)");
+	Accept.ActionId = FName(TEXT("bribe_accept"));
+
+	FRANDMessageOption Decline;
+	Decline.Label = NSLOCTEXT("RANDMission", "Bribe_Decline", "Decline");
+	Decline.ActionId = FName(TEXT("bribe_decline"));
+
+	Phone->ReceiveMessageWithOptions(TEXT("Thandi"),
+		NSLOCTEXT("RANDMission", "Bribe_Offer",
+			"Push this tender through and there's R85,000 in it for you. We never had this chat."),
+		{ Accept, Decline });
+}
+
+void ARANDMission_Consultation::HandlePhoneOption(FName ActionId)
+{
+	if (ActionId == FName(TEXT("bribe_accept")))
+	{
+		AcceptBribe();
+	}
+	else if (ActionId == FName(TEXT("bribe_decline")))
+	{
+		DeclineBribe();
+	}
 }
 
 void ARANDMission_Consultation::AcceptBribe()
