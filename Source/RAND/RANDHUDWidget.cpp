@@ -6,6 +6,7 @@
 #include "InteractionComponent.h"
 #include "TimeComponent.h"
 #include "RANDMissionManager.h"
+#include "RANDMinimapWidget.h"
 
 #include "Blueprint/WidgetTree.h"
 #include "Components/CanvasPanel.h"
@@ -168,7 +169,17 @@ TSharedRef<SWidget> URANDHUDWidget::RebuildWidget()
 		PromptCanvasSlot->SetPosition(FVector2D(0.0f, -120.0f));
 		PromptCanvasSlot->SetAutoSize(true);
 
-		// --- Clock (top-right): "Day 1 - 14:32" ----------------------------
+		// --- Minimap (top-right, 200x200) ----------------------------------
+		Minimap = WidgetTree->ConstructWidget<URANDMinimapWidget>(
+			URANDMinimapWidget::StaticClass(), TEXT("Minimap"));
+
+		UCanvasPanelSlot* MinimapSlot = Root->AddChildToCanvas(Minimap);
+		MinimapSlot->SetAnchors(FAnchors(1.0f, 0.0f));
+		MinimapSlot->SetAlignment(FVector2D(1.0f, 0.0f));
+		MinimapSlot->SetPosition(FVector2D(-40.0f, 40.0f));
+		MinimapSlot->SetSize(FVector2D(200.0f, 200.0f));
+
+		// --- Clock (top-right, just below the minimap): "Day 1 - 14:32" -----
 		TimeText = WidgetTree->ConstructWidget<UTextBlock>(
 			UTextBlock::StaticClass(), TEXT("TimeText"));
 		TimeText->SetText(FText::GetEmpty());
@@ -178,7 +189,7 @@ TSharedRef<SWidget> URANDHUDWidget::RebuildWidget()
 		UCanvasPanelSlot* TimeCanvasSlot = Root->AddChildToCanvas(TimeText);
 		TimeCanvasSlot->SetAnchors(FAnchors(1.0f, 0.0f));
 		TimeCanvasSlot->SetAlignment(FVector2D(1.0f, 0.0f));
-		TimeCanvasSlot->SetPosition(FVector2D(-40.0f, 40.0f));
+		TimeCanvasSlot->SetPosition(FVector2D(-40.0f, 252.0f));
 		TimeCanvasSlot->SetAutoSize(true);
 
 		// --- Active mission (bottom-right) ---------------------------------

@@ -12,6 +12,7 @@ class UHealthComponent;
 class UInteractionComponent;
 class URANDTimeComponent;
 class URANDMissionManager;
+class URANDMinimapWidget;
 class UProgressBar;
 class UTextBlock;
 class UVerticalBox;
@@ -72,6 +73,10 @@ protected:
 	/** Top-center "new message" indicator. */
 	UPROPERTY()
 	TObjectPtr<UTextBlock> PhoneNotificationText;
+
+	/** Top-right minimap. */
+	UPROPERTY()
+	TObjectPtr<URANDMinimapWidget> Minimap;
 
 	/** Index order matches EAgency: 0 SAPS, 1 Hawks, 2 Rivals. */
 	UPROPERTY()
