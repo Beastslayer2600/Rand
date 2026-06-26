@@ -58,10 +58,12 @@ ARANDCharacter::ARANDCharacter()
 		GetMesh()->SetSkeletalMeshAsset(PlaceholderMesh.Object);
 	}
 
-	// Default Manny locomotion (idle/walk/run/jump). This is the engine's
-	// stock mannequin AnimBP; André's bespoke animation comes much later.
+	// Locomotion AnimBP — ABP_Andre, parented to URANDAnimInstance (our C++
+	// driver). Replaces the MoverExamples ABP_Manny, which is Mover-coupled and
+	// won't animate a CharacterMovement-based pawn. The AnimGraph blends the
+	// Manny idle/walk/run/jump anims off GroundSpeed + bIsInAir.
 	static ConstructorHelpers::FClassFinder<UAnimInstance> LocomotionABP(
-		TEXT("/MoverExamples/Characters/Mannequins/Animations/ABP_Manny.ABP_Manny_C"));
+		TEXT("/Game/Characters/ABP_Andre.ABP_Andre_C"));
 	if (LocomotionABP.Succeeded())
 	{
 		GetMesh()->SetAnimationMode(EAnimationMode::AnimationBlueprint);
