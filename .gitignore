@@ -26,6 +26,9 @@ Saved/
 # Stray pre-existing standalone repo (separate GitHub clone — not part of this project)
 /Rand/
 
+# Stray UE template project (kept on disk, not part of RAND)
+/MyProject/
+
 # OS noise
 Thumbs.db
 .DS_Store
