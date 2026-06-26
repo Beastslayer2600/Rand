@@ -32,3 +32,6 @@
 *.h   text
 *.cs  text
 *.ini text
+
+# Git hook scripts must stay LF, or git-bash can't execute them.
+.githooks/pre-commit text eol=lf

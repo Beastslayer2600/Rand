@@ -1,0 +1,27 @@
+#!/bin/sh
+#
+# pre-commit: strip a UTF-8 BOM from staged .uproject and .ini files.
+#
+# Unreal Engine (and some editors / the version selector) re-save .uproject and
+# .ini files with a UTF-8 byte-order mark (EF BB BF). That BOM produces noisy
+# diffs and can trip up tooling, so remove it from any such file staged for
+# commit and re-stage the cleaned version.
+#
+# This file is version-controlled at .githooks/pre-commit. The ACTIVE hook lives
+# at .git/hooks/pre-commit (not tracked by git). To (re)install on a fresh clone:
+#     cp .githooks/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+# (Installed this way rather than via core.hooksPath so Git LFS's own hooks keep
+# working.)
+
+BOM=$(printf '\357\273\277')
+
+git diff --cached --name-only --diff-filter=ACM | grep -iE '\.(uproject|ini)$' | while IFS= read -r f; do
+	[ -f "$f" ] || continue
+	if [ "$(head -c 3 "$f")" = "$BOM" ]; then
+		tail -c +4 "$f" > "$f.nobom" && mv "$f.nobom" "$f"
+		git add "$f"
+		echo "pre-commit: stripped UTF-8 BOM from $f"
+	fi
+done
+
+exit 0
