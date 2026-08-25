@@ -5,7 +5,6 @@
 #include "RANDCharacter_NPC.h"
 #include "RANDNPCAIController.h"
 #include "WantedComponent.h"
-#include "HealthComponent.h"
 #include "Engine/World.h"
 #include "Engine/EngineTypes.h"
 #include "GameFramework/PlayerController.h"
@@ -20,50 +19,36 @@ URANDCombatComponent::URANDCombatComponent()
 
 void URANDCombatComponent::Fire()
 {
-	if (!bArmed)
-	{
-		return;
-	}
+	if (!bArmed || CurrentMag <= 0) return;
 
 	UWorld* World = GetWorld();
 	ARANDCharacter* Shooter = Cast<ARANDCharacter>(GetOwner());
-	if (!World || !Shooter)
-	{
-		return;
-	}
+	if (!World || !Shooter) return;
 
 	const float Now = World->GetTimeSeconds();
-	if (Now - LastFireTime < FireCooldown)
-	{
-		return;
-	}
+	if (Now - LastFireTime < FireCooldown) return;
 	LastFireTime = Now;
+	--CurrentMag;
 
 	FVector Start = Shooter->GetActorLocation() + FVector(0.0f, 0.0f, 70.0f);
 	FVector Dir = Shooter->GetActorForwardVector();
 	if (APlayerController* PC = Cast<APlayerController>(Shooter->GetController()))
 	{
-		FVector CamLoc;
-		FRotator CamRot;
+		FVector CamLoc; FRotator CamRot;
 		PC->GetPlayerViewPoint(CamLoc, CamRot);
-		Start = CamLoc;
-		Dir = CamRot.Vector();
+		Start = CamLoc; Dir = CamRot.Vector();
 	}
 
 	const FVector End = Start + Dir * WeaponRange;
-
 	FHitResult Hit;
 	FCollisionQueryParams Params(SCENE_QUERY_STAT(RANDFire), false, Shooter);
 	const bool bHit = World->LineTraceSingleByChannel(Hit, Start, End, ECC_Pawn, Params);
-
 	DrawDebugLine(World, Start, bHit ? Hit.ImpactPoint : End, FColor::Orange, false, 0.15f, 0, 1.5f);
 
 	if (bHit && Hit.GetActor())
 	{
-		UGameplayStatics::ApplyPointDamage(
-			Hit.GetActor(), WeaponDamage, Dir, Hit,
+		UGameplayStatics::ApplyPointDamage(Hit.GetActor(), WeaponDamage, Dir, Hit,
 			Shooter->GetController(), Shooter, UDamageType::StaticClass());
-
 		if (ARANDCharacter_NPC* NPC = Cast<ARANDCharacter_NPC>(Hit.GetActor()))
 		{
 			if (ARANDNPCAIController* AI = Cast<ARANDNPCAIController>(NPC->GetController()))
@@ -73,30 +58,34 @@ void URANDCombatComponent::Fire()
 		}
 	}
 
-	if (UWantedComponent* Wanted = Shooter->GetWantedComponent())
-	{
-		Wanted->AddHeat(EAgency::SAPS, ShotHeatSAPS);
-	}
-
+	if (UWantedComponent* Wanted = Shooter->GetWantedComponent()) Wanted->AddHeat(EAgency::SAPS, ShotHeatSAPS);
 	NotifyNearbyWitnesses(Start);
+}
+
+void URANDCombatComponent::Reload()
+{
+	if (!bArmed) return;
+	const int32 Need = MagSize - CurrentMag;
+	if (Need <= 0 || ReserveAmmo <= 0) return;
+	const int32 Take = FMath::Min(Need, ReserveAmmo);
+	CurrentMag += Take;
+	ReserveAmmo -= Take;
+}
+
+void URANDCombatComponent::AddReserve(int32 Rounds)
+{
+	ReserveAmmo = FMath::Max(0, ReserveAmmo + Rounds);
 }
 
 void URANDCombatComponent::NotifyNearbyWitnesses(const FVector& ShotOrigin)
 {
 	UWorld* World = GetWorld();
-	if (!World)
-	{
-		return;
-	}
-
+	if (!World) return;
 	TArray<AActor*> NPCs;
 	UGameplayStatics::GetAllActorsOfClass(World, ARANDCharacter_NPC::StaticClass(), NPCs);
 	for (AActor* Actor : NPCs)
 	{
-		if (!Actor || FVector::Dist(Actor->GetActorLocation(), ShotOrigin) > WitnessPingRadius)
-		{
-			continue;
-		}
+		if (!Actor || FVector::Dist(Actor->GetActorLocation(), ShotOrigin) > WitnessPingRadius) continue;
 		if (ARANDCharacter_NPC* NPC = Cast<ARANDCharacter_NPC>(Actor))
 		{
 			if (ARANDNPCAIController* AI = Cast<ARANDNPCAIController>(NPC->GetController()))
