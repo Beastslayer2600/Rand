@@ -2,17 +2,18 @@
 
 #include "RANDNPCAIController.h"
 #include "RANDCharacter_NPC.h"
-
+#include "RANDCharacter.h"
+#include "WantedComponent.h"
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "BehaviorTree/BlackboardData.h"
 #include "BehaviorTree/Blackboard/BlackboardKeyType_Vector.h"
 #include "BehaviorTree/Blackboard/BlackboardKeyType_Float.h"
 #include "BehaviorTree/Blackboard/BlackboardKeyType_Bool.h"
-
 #include "NavigationSystem.h"
 #include "Navigation/PathFollowingComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "GameFramework/DamageType.h"
 #include "Engine/World.h"
 #include "TimerManager.h"
 #include "DrawDebugHelpers.h"
@@ -26,30 +27,22 @@ const FName ARANDNPCAIController::Key_DistanceToPlayer = FName(TEXT("DistanceToP
 ARANDNPCAIController::ARANDNPCAIController()
 {
 	PrimaryActorTick.bCanEverTick = true;
-	PrimaryActorTick.TickInterval = 0.2f; // proximity checks at 5 Hz are plenty
+	PrimaryActorTick.TickInterval = 0.2f;
 }
 
 void ARANDNPCAIController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
-
-	if (!InPawn)
-	{
-		return;
-	}
-
+	if (!InPawn) return;
 	HomeLocation = InPawn->GetActorLocation();
 	SetupBlackboard(HomeLocation);
-
 	if (BehaviorTreeAsset)
 	{
-		// Designer-authored tree drives behaviour; the blackboard is shared.
 		bUsingCodeLogic = false;
 		RunBehaviorTree(BehaviorTreeAsset);
 	}
 	else
 	{
-		// Built-in patrol/idle loop.
 		bUsingCodeLogic = true;
 		EnterIdle();
 	}
@@ -57,17 +50,13 @@ void ARANDNPCAIController::OnPossess(APawn* InPawn)
 
 void ARANDNPCAIController::OnUnPossess()
 {
-	if (UWorld* World = GetWorld())
-	{
-		World->GetTimerManager().ClearTimer(IdleTimer);
-	}
+	if (UWorld* World = GetWorld()) World->GetTimerManager().ClearTimer(IdleTimer);
 	Super::OnUnPossess();
 }
 
 void ARANDNPCAIController::SetupBlackboard(const FVector& Home)
 {
 	BlackboardAsset = NewObject<UBlackboardData>(this, TEXT("RANDBlackboardData"));
-
 	auto AddKey = [this](FName Name, TSubclassOf<UBlackboardKeyType> KeyTypeClass)
 	{
 		FBlackboardEntry Entry;
@@ -75,18 +64,14 @@ void ARANDNPCAIController::SetupBlackboard(const FVector& Home)
 		Entry.KeyType = NewObject<UBlackboardKeyType>(BlackboardAsset, KeyTypeClass);
 		BlackboardAsset->Keys.Add(Entry);
 	};
-
 	AddKey(Key_HomeLocation, UBlackboardKeyType_Vector::StaticClass());
 	AddKey(Key_PatrolRadius, UBlackboardKeyType_Float::StaticClass());
 	AddKey(Key_PlayerNearby, UBlackboardKeyType_Bool::StaticClass());
 	AddKey(Key_CrimeWitnessed, UBlackboardKeyType_Bool::StaticClass());
 	AddKey(Key_DistanceToPlayer, UBlackboardKeyType_Float::StaticClass());
-
-	// UseBlackboard wants a raw pointer reference; bind through a local.
 	UBlackboardComponent* BB = nullptr;
 	UseBlackboard(BlackboardAsset, BB);
 	BlackboardComp = BB;
-
 	if (BlackboardComp)
 	{
 		BlackboardComp->SetValueAsVector(Key_HomeLocation, Home);
@@ -100,12 +85,11 @@ void ARANDNPCAIController::SetupBlackboard(const FVector& Home)
 void ARANDNPCAIController::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-
 	UpdateProximity();
-
 	if (bUsingCodeLogic)
 	{
 		HandleCrimeReaction();
+		UpdateWantedPursuit();
 	}
 }
 
@@ -113,26 +97,15 @@ void ARANDNPCAIController::UpdateProximity()
 {
 	APawn* Self = GetPawn();
 	ACharacter* PlayerChar = UGameplayStatics::GetPlayerCharacter(this, 0);
-	if (!Self || !PlayerChar)
-	{
-		return;
-	}
-
+	if (!Self || !PlayerChar) return;
 	const float Distance = FVector::Dist(Self->GetActorLocation(), PlayerChar->GetActorLocation());
 	const bool bNearby = Distance <= GreetingRadius;
-
 	if (BlackboardComp)
 	{
 		BlackboardComp->SetValueAsFloat(Key_DistanceToPlayer, Distance);
 		BlackboardComp->SetValueAsBool(Key_PlayerNearby, bNearby);
 	}
-
-	if (!bUsingCodeLogic)
-	{
-		return;
-	}
-
-	// Greet once per approach: fire on entering range, re-arm on leaving.
+	if (!bUsingCodeLogic) return;
 	if (bNearby && !bGreetedCurrentApproach)
 	{
 		bGreetedCurrentApproach = true;
@@ -149,49 +122,55 @@ void ARANDNPCAIController::UpdateProximity()
 
 void ARANDNPCAIController::HandleCrimeReaction()
 {
-	if (bReactedToCrime || !BlackboardComp || !BlackboardComp->GetValueAsBool(Key_CrimeWitnessed))
-	{
-		return;
-	}
-
+	if (bReactedToCrime || !BlackboardComp || !BlackboardComp->GetValueAsBool(Key_CrimeWitnessed)) return;
 	ARANDCharacter_NPC* NPC = Cast<ARANDCharacter_NPC>(GetPawn());
-	if (!NPC)
-	{
-		return;
-	}
-
+	if (!NPC) return;
 	bReactedToCrime = true;
 	ShowLine(NPC->GetReactionLine(ESituationType::CrimeWitnessed));
-
 	if (NPC->NPCType == ENPCType::Police)
 	{
-		// Police report it — feeds heat to the player's wanted component.
 		NPC->WitnessCrime(25.0f);
 	}
 	else if (NPC->NPCType == ENPCType::Civilian)
 	{
-		// Civilians run home.
-		if (UWorld* World = GetWorld())
-		{
-			World->GetTimerManager().ClearTimer(IdleTimer);
-		}
+		if (UWorld* World = GetWorld()) World->GetTimerManager().ClearTimer(IdleTimer);
 		State = EAIState::Flee;
 		MoveToLocation(HomeLocation, 50.0f);
 	}
 }
 
+void ARANDNPCAIController::UpdateWantedPursuit()
+{
+	ARANDCharacter_NPC* NPC = Cast<ARANDCharacter_NPC>(GetPawn());
+	ARANDCharacter* Player = Cast<ARANDCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0));
+	if (!NPC || !Player || NPC->NPCType != ENPCType::Police || !Player->GetWantedComponent()) return;
+	const EHeatLevel Peak = Player->GetWantedComponent()->GetPeakHeatLevel();
+	if (Peak < EHeatLevel::Wanted)
+	{
+		if (State == EAIState::Pursue) EnterIdle();
+		return;
+	}
+	State = EAIState::Pursue;
+	const float Dist = FVector::Dist(NPC->GetActorLocation(), Player->GetActorLocation());
+	if (Dist <= 280.0f && Peak >= EHeatLevel::Manhunt) AttackPlayer();
+	else MoveToActor(Player, 120.0f);
+}
+
+void ARANDNPCAIController::AttackPlayer()
+{
+	APawn* Self = GetPawn();
+	ACharacter* Player = UGameplayStatics::GetPlayerCharacter(this, 0);
+	if (!Self || !Player) return;
+	UGameplayStatics::ApplyDamage(Player, 8.0f, this, Self, UDamageType::StaticClass());
+}
+
 void ARANDNPCAIController::EnterIdle()
 {
 	State = EAIState::Idle;
-
 	UWorld* World = GetWorld();
-	if (!World)
-	{
-		return;
-	}
-
+	if (!World) return;
 	const float Wait = FMath::FRandRange(IdleMinSeconds, IdleMaxSeconds);
-	World->GetTimerManager().SetTimer(IdleTimer, this, &ARANDNPCAIController::BeginPatrol, Wait, /*bLoop=*/false);
+	World->GetTimerManager().SetTimer(IdleTimer, this, &ARANDNPCAIController::BeginPatrol, Wait, false);
 }
 
 void ARANDNPCAIController::BeginPatrol()
@@ -203,52 +182,32 @@ void ARANDNPCAIController::BeginPatrol()
 void ARANDNPCAIController::GoToPatrolPoint()
 {
 	UNavigationSystemV1* Nav = UNavigationSystemV1::GetCurrent(GetWorld());
-	if (!Nav)
-	{
-		EnterIdle(); // No navmesh — just keep idling.
-		return;
-	}
-
+	if (!Nav) { EnterIdle(); return; }
 	FNavLocation Result;
 	if (Nav->GetRandomReachablePointInRadius(HomeLocation, PatrolRadius, Result))
 	{
 		MoveToLocation(Result.Location, 50.0f);
 	}
-	else
-	{
-		EnterIdle();
-	}
+	else EnterIdle();
 }
 
 void ARANDNPCAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result)
 {
 	Super::OnMoveCompleted(RequestID, Result);
-
-	if (!bUsingCodeLogic)
-	{
-		return;
-	}
-
-	// Reaching a patrol point or home returns the NPC to the idle loop.
+	if (!bUsingCodeLogic) return;
+	if (State == EAIState::Pursue) { UpdateWantedPursuit(); return; }
 	EnterIdle();
 }
 
 void ARANDNPCAIController::NotifyCrimeWitnessed()
 {
-	if (BlackboardComp)
-	{
-		BlackboardComp->SetValueAsBool(Key_CrimeWitnessed, true);
-	}
+	if (BlackboardComp) BlackboardComp->SetValueAsBool(Key_CrimeWitnessed, true);
 }
 
 void ARANDNPCAIController::ShowLine(const FText& Line)
 {
 	APawn* Self = GetPawn();
-	if (!Self || Line.IsEmpty())
-	{
-		return;
-	}
-
+	if (!Self || Line.IsEmpty()) return;
 	DrawDebugString(GetWorld(), Self->GetActorLocation() + FVector(0.0f, 0.0f, 150.0f),
 		Line.ToString(), nullptr, FColor::Yellow, 2.5f, true);
 }
