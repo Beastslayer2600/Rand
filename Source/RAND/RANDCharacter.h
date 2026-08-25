@@ -19,6 +19,7 @@ class URANDBusinessManager;
 class URANDCareerComponent;
 class URANDReputationComponent;
 class URANDCombatComponent;
+class URANDInventoryComponent;
 
 UCLASS()
 class RAND_API ARANDCharacter : public ACharacter
@@ -51,6 +52,9 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Combat")
 	URANDCombatComponent* GetCombatComponent() const { return CombatComponent; }
+
+	UFUNCTION(BlueprintPure, Category = "Inventory")
+	URANDInventoryComponent* GetInventoryComponent() const { return InventoryComponent; }
 
 	UPROPERTY(BlueprintReadWrite, Category = "Story")
 	bool bAcceptedBribe = false;
@@ -118,6 +122,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<URANDCombatComponent> CombatComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<URANDInventoryComponent> InventoryComponent;
 
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
