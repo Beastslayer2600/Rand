@@ -23,6 +23,9 @@ public:
 	static const FName Mission3ID;
 	static const FName Mission4ID;
 	static const FName Mission5ID;
+	static const FName Mission6ID;
+	static const FName Mission7ID;
+	static const FName Mission8ID;
 
 	UFUNCTION(BlueprintPure, Category = "Campaign")
 	int32 GetAct1Index() const { return ActIndex; }
@@ -34,23 +37,15 @@ private:
 	int32 ActIndex = 1;
 	bool bSeeded = false;
 
-	UPROPERTY()
-	TObjectPtr<ARANDCharacter_NPC> ActiveNPC;
-
-	UPROPERTY()
-	TObjectPtr<AActor> ActiveTriggerActor;
+	UPROPERTY() TObjectPtr<ARANDCharacter_NPC> ActiveNPC;
+	UPROPERTY() TObjectPtr<AActor> ActiveTriggerActor;
 
 	FTimerHandle KickTimer;
 	FTimerHandle MessageTimer;
 
-	UFUNCTION()
-	void Kickoff();
-
-	UFUNCTION()
-	void HandleMissionComplete(FName MissionID);
-
-	UFUNCTION()
-	void HandlePhoneOption(FName ActionId);
+	UFUNCTION() void Kickoff();
+	UFUNCTION() void HandleMissionComplete(FName MissionID);
+	UFUNCTION() void HandlePhoneOption(FName ActionId);
 
 	void SeedStartingLife();
 	void EnsureConsultationExists();
@@ -60,15 +55,16 @@ private:
 	void StartMission3();
 	void StartMission4();
 	void StartMission5();
-	void FinishCampaign();
+	void FinishAct1();
+	void StartMission6();
+	void StartMission7();
+	void StartMission8();
+	void FinishAct2();
 
 	void SpawnTalkObjective(const FString& NPCName, const FText& Line, FName CompleteAs);
 
-	UFUNCTION()
-	void CompleteActiveTalk();
-
-	UFUNCTION()
-	void HandleDialogueStarted(const FRANDDialogueLine& Line);
+	UFUNCTION() void CompleteActiveTalk();
+	UFUNCTION() void HandleDialogueStarted(const FRANDDialogueLine& Line);
 
 	void Send(const FString& Sender, const FText& Text);
 	void SendChoice(const FString& Sender, const FText& Text,
