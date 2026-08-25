@@ -32,5 +32,7 @@ private:
 	void Send(const FString& Sender, const FText& Text);
 	void SendChoice(const FString& Sender, const FText& Text, const FText& A, FName AId, const FText& B, FName BId);
 
+	bool bMissionsBound = false;
+	bool bPhoneBound = false;
 	FTimerHandle BindTimer;
 };
