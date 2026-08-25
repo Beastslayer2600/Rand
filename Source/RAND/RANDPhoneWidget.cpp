@@ -43,7 +43,6 @@ TSharedRef<SWidget> URANDPhoneWidget::RebuildWidget()
 			UCanvasPanel::StaticClass(), TEXT("PhoneRoot"));
 		WidgetTree->RootWidget = Root;
 
-		// Phone frame: a dark panel on the right third of the screen.
 		UBorder* Frame = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("PhoneFrame"));
 		Frame->SetBrushColor(FLinearColor(0.05f, 0.07f, 0.06f, 0.96f));
 		Frame->SetPadding(FMargin(12.0f));
@@ -52,7 +51,6 @@ TSharedRef<SWidget> URANDPhoneWidget::RebuildWidget()
 			UVerticalBox::StaticClass(), TEXT("PhoneColumn"));
 		Frame->SetContent(Column);
 
-		// Header.
 		UTextBlock* Header = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("PhoneHeader"));
 		Header->SetText(NSLOCTEXT("RANDPhone", "Messages", "Messages"));
 		Header->SetColorAndOpacity(FSlateColor(FLinearColor(0.30f, 0.85f, 0.45f)));
@@ -61,22 +59,18 @@ TSharedRef<SWidget> URANDPhoneWidget::RebuildWidget()
 			HSlot->SetPadding(FMargin(0.0f, 0.0f, 0.0f, 8.0f));
 		}
 
-		// Scrollable message thread (fills the column).
 		MessageList = WidgetTree->ConstructWidget<UScrollBox>(UScrollBox::StaticClass(), TEXT("MessageList"));
 		if (UVerticalBoxSlot* LSlot = Column->AddChildToVerticalBox(MessageList))
 		{
 			LSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
 		}
 
-		// Reply buttons for the active prompt.
 		OptionBox = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("OptionBox"));
 		if (UVerticalBoxSlot* OSlot = Column->AddChildToVerticalBox(OptionBox))
 		{
 			OSlot->SetPadding(FMargin(0.0f, 8.0f, 0.0f, 0.0f));
 		}
 
-		// Fixed-size panel hugging the top-right corner (unambiguous: a point
-		// anchor + alignment, no stretch).
 		UCanvasPanelSlot* FrameSlot = Root->AddChildToCanvas(Frame);
 		FrameSlot->SetAnchors(FAnchors(1.0f, 0.0f));
 		FrameSlot->SetAlignment(FVector2D(1.0f, 0.0f));
@@ -84,13 +78,9 @@ TSharedRef<SWidget> URANDPhoneWidget::RebuildWidget()
 		FrameSlot->SetSize(FVector2D(380.0f, 720.0f));
 	}
 
-	// Start hidden; ARANDHUD/Tab opens it.
 	SetVisibility(bIsOpen ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
-
 	return Super::RebuildWidget();
 }
-
-// --- Messaging --------------------------------------------------------------
 
 void URANDPhoneWidget::ReceiveMessage(const FString& Sender, const FText& Text)
 {
@@ -110,7 +100,7 @@ void URANDPhoneWidget::AddMessage(const FString& Sender, const FText& Text,
 	Message.Sender = Sender;
 	Message.MessageText = Text;
 	Message.GameTimestamp = CurrentTimestamp();
-	Message.bIsRead = bIsOpen; // read immediately if the player is looking at it
+	Message.bIsRead = bIsOpen;
 	Message.Options = Options;
 
 	const int32 Index = Messages.Add(Message);
@@ -122,7 +112,6 @@ void URANDPhoneWidget::AddMessage(const FString& Sender, const FText& Text,
 	RebuildMessageList();
 	RebuildOptions();
 
-	// Raise the HUD notification for messages that arrive while the phone is shut.
 	if (!bIsOpen && HUDWidget.IsValid())
 	{
 		HUDWidget->SetPhoneNotification(true);
@@ -134,20 +123,14 @@ int32 URANDPhoneWidget::GetUnreadCount() const
 	int32 Count = 0;
 	for (const FRANDMessage& Message : Messages)
 	{
-		if (!Message.bIsRead)
-		{
-			++Count;
-		}
+		if (!Message.bIsRead) ++Count;
 	}
 	return Count;
 }
 
 void URANDPhoneWidget::MarkAllRead()
 {
-	for (FRANDMessage& Message : Messages)
-	{
-		Message.bIsRead = true;
-	}
+	for (FRANDMessage& Message : Messages) Message.bIsRead = true;
 }
 
 FString URANDPhoneWidget::CurrentTimestamp() const
@@ -159,8 +142,6 @@ FString URANDPhoneWidget::CurrentTimestamp() const
 	return FString();
 }
 
-// --- Visibility -------------------------------------------------------------
-
 void URANDPhoneWidget::OpenPhone()
 {
 	bIsOpen = true;
@@ -168,10 +149,7 @@ void URANDPhoneWidget::OpenPhone()
 	MarkAllRead();
 	RebuildMessageList();
 	RebuildOptions();
-	if (HUDWidget.IsValid())
-	{
-		HUDWidget->SetPhoneNotification(false);
-	}
+	if (HUDWidget.IsValid()) HUDWidget->SetPhoneNotification(false);
 }
 
 void URANDPhoneWidget::ClosePhone()
@@ -182,14 +160,8 @@ void URANDPhoneWidget::ClosePhone()
 
 void URANDPhoneWidget::TogglePhone()
 {
-	if (bIsOpen)
-	{
-		ClosePhone();
-	}
-	else
-	{
-		OpenPhone();
-	}
+	if (bIsOpen) ClosePhone();
+	else OpenPhone();
 }
 
 void URANDPhoneWidget::SetHUDWidget(URANDHUDWidget* InHUDWidget)
@@ -197,14 +169,14 @@ void URANDPhoneWidget::SetHUDWidget(URANDHUDWidget* InHUDWidget)
 	HUDWidget = InHUDWidget;
 }
 
-// --- Tree rebuilds ----------------------------------------------------------
+void URANDPhoneWidget::ChooseOptionByIndex(int32 OptionIndex)
+{
+	SelectOption(OptionIndex);
+}
 
 void URANDPhoneWidget::RebuildMessageList()
 {
-	if (!MessageList)
-	{
-		return;
-	}
+	if (!MessageList) return;
 	MessageList->ClearChildren();
 
 	for (const FRANDMessage& Message : Messages)
@@ -241,24 +213,17 @@ void URANDPhoneWidget::RebuildMessageList()
 
 void URANDPhoneWidget::RebuildOptions()
 {
-	if (!OptionBox)
-	{
-		return;
-	}
+	if (!OptionBox) return;
 	OptionBox->ClearChildren();
 
-	if (!bIsOpen || !Messages.IsValidIndex(PendingOptionMessage))
-	{
-		return;
-	}
+	if (!bIsOpen || !Messages.IsValidIndex(PendingOptionMessage)) return;
 
 	const TArray<FRANDMessageOption>& Options = Messages[PendingOptionMessage].Options;
 	for (int32 i = 0; i < Options.Num() && i < 4; ++i)
 	{
 		UButton* Button = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass());
-
 		UTextBlock* Label = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
-		Label->SetText(Options[i].Label);
+		Label->SetText(FText::Format(NSLOCTEXT("RANDPhone", "Opt", "{0}. {1}"), FText::AsNumber(i + 1), Options[i].Label));
 		Button->AddChild(Label);
 
 		switch (i)
@@ -284,22 +249,11 @@ void URANDPhoneWidget::HandleOption3() { SelectOption(3); }
 
 void URANDPhoneWidget::SelectOption(int32 OptionIndex)
 {
-	if (!Messages.IsValidIndex(PendingOptionMessage))
-	{
-		return;
-	}
-
+	if (!Messages.IsValidIndex(PendingOptionMessage)) return;
 	const TArray<FRANDMessageOption>& Options = Messages[PendingOptionMessage].Options;
-	if (!Options.IsValidIndex(OptionIndex))
-	{
-		return;
-	}
-
+	if (!Options.IsValidIndex(OptionIndex)) return;
 	const FName ActionId = Options[OptionIndex].ActionId;
-
-	// Consume the prompt before broadcasting so re-entrancy can't double-fire.
 	PendingOptionMessage = INDEX_NONE;
 	RebuildOptions();
-
 	OnMessageOptionSelected.Broadcast(ActionId);
 }
