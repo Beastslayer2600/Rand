@@ -22,6 +22,7 @@
 #include "RANDCareerComponent.h"
 #include "RANDReputationComponent.h"
 #include "RANDCombatComponent.h"
+#include "RANDInventoryComponent.h"
 #include "RANDSARSComponent.h"
 
 #include "EnhancedInputComponent.h"
@@ -107,6 +108,7 @@ ARANDCharacter::ARANDCharacter()
 	CareerComponent      = CreateDefaultSubobject<URANDCareerComponent>(TEXT("CareerComponent"));
 	ReputationComponent  = CreateDefaultSubobject<URANDReputationComponent>(TEXT("ReputationComponent"));
 	CombatComponent      = CreateDefaultSubobject<URANDCombatComponent>(TEXT("CombatComponent"));
+	InventoryComponent   = CreateDefaultSubobject<URANDInventoryComponent>(TEXT("InventoryComponent"));
 }
 
 void ARANDCharacter::ConfigureInputMappings()
