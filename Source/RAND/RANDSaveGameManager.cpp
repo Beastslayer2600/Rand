@@ -10,6 +10,7 @@
 #include "RANDCareerComponent.h"
 #include "RANDReputationComponent.h"
 #include "RANDCombatComponent.h"
+#include "RANDInventoryComponent.h"
 #include "RANDSARSComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerController.h"
@@ -99,6 +100,7 @@ void URANDSaveGameManager::SaveGame()
 		}
 		if (URANDReputationComponent* Rep = Player->GetReputationComponent()) Rep->CopyStandings(Save->ContactStandings);
 		if (URANDCombatComponent* Combat = Player->GetCombatComponent()) Save->bArmed = Combat->IsArmed();
+		if (URANDInventoryComponent* Inv = Player->GetInventoryComponent()) Save->Inventory = Inv->GetItems();
 	}
 	if (URANDSARSComponent* SARS = URANDSARSComponent::Get(this))
 	{
@@ -135,6 +137,7 @@ void URANDSaveGameManager::LoadGame()
 		if (URANDCareerComponent* Career = Player->GetCareerComponent()) Career->LoadState(Save->CareerStage, Save->Ending);
 		if (URANDReputationComponent* Rep = Player->GetReputationComponent()) Rep->LoadStandings(Save->ContactStandings);
 		if (URANDCombatComponent* Combat = Player->GetCombatComponent()) Combat->SetArmed(Save->bArmed);
+		if (URANDInventoryComponent* Inv = Player->GetInventoryComponent()) Inv->LoadItems(Save->Inventory);
 	}
 	if (URANDSARSComponent* SARS = URANDSARSComponent::Get(this))
 	{
