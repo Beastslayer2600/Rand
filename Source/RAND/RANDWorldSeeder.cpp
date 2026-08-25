@@ -4,6 +4,7 @@
 #include "RANDCharacter.h"
 #include "RANDProperty.h"
 #include "RANDTenderDesk.h"
+#include "RANDNPCSpawner.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
 #include "TimerManager.h"
@@ -48,5 +49,20 @@ void URANDWorldSeeder::Seed()
 		FActorSpawnParameters Params;
 		Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 		World->SpawnActor<ARANDTenderDesk>(ARANDTenderDesk::StaticClass(), Loc, FRotator::ZeroRotator, Params);
+	}
+
+	if (!UGameplayStatics::GetActorOfClass(this, ARANDNPCSpawner::StaticClass()))
+	{
+		FActorSpawnParameters Params;
+		Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		if (ARANDNPCSpawner* Spawner = World->SpawnActor<ARANDNPCSpawner>(
+			ARANDNPCSpawner::StaticClass(), Player->GetActorLocation(), FRotator::ZeroRotator, Params))
+		{
+			Spawner->District = EDistrict::MarshallTown;
+			Spawner->CivilianCount = 8;
+			Spawner->PoliceCount = 2;
+			Spawner->CriminalCount = 1;
+			Spawner->SpawnRadius = 1600.0f;
+		}
 	}
 }

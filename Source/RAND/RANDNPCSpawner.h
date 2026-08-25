@@ -9,13 +9,6 @@
 
 class ARANDCharacter_NPC;
 
-/**
- * ARANDNPCSpawner — placed in a level to populate a district with NPCs.
- *
- * On BeginPlay it spawns SpawnCount NPCs of NPCClass, scattered uniformly
- * within SpawnRadius, and assigns each the district's weighted-random home
- * language via AssignLanguageFromDistrict.
- */
 UCLASS()
 class RAND_API ARANDNPCSpawner : public AActor
 {
@@ -24,25 +17,32 @@ class RAND_API ARANDNPCSpawner : public AActor
 public:
 	ARANDNPCSpawner();
 
-	/** District whose language profile spawned NPCs draw from. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawner")
-	EDistrict District = EDistrict::Hillbrow;
+	EDistrict District = EDistrict::MarshallTown;
 
-	/** NPC class to spawn. Defaults to ARANDCharacter_NPC. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawner")
 	TSubclassOf<ARANDCharacter_NPC> NPCClass;
 
-	/** How many NPCs to spawn. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawner", meta = (ClampMin = "0"))
-	int32 SpawnCount = 5;
+	int32 CivilianCount = 8;
 
-	/** Radius (cm) of the disc NPCs are scattered within, centred on the spawner. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawner", meta = (ClampMin = "0"))
+	int32 PoliceCount = 2;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawner", meta = (ClampMin = "0"))
+	int32 CriminalCount = 1;
+
+	/** Legacy single count; used only if the typed counts are all zero. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawner", meta = (ClampMin = "0"))
+	int32 SpawnCount = 0;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawner", meta = (ClampMin = "0.0"))
-	float SpawnRadius = 500.0f;
+	float SpawnRadius = 1800.0f;
 
 protected:
 	virtual void BeginPlay() override;
 
 private:
 	void SpawnNPCs();
+	ARANDCharacter_NPC* SpawnOne(const FVector& Origin, uint8 TypeIndex);
 };
