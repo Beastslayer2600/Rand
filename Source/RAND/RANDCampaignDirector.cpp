@@ -11,6 +11,7 @@
 #include "RANDCareerComponent.h"
 #include "RANDReputationComponent.h"
 #include "RANDCombatComponent.h"
+#include "RANDInventoryComponent.h"
 #include "RANDSARSComponent.h"
 #include "RANDPhoneWidget.h"
 #include "DialogueComponent.h"
@@ -22,6 +23,9 @@ const FName URANDCampaignDirector::Mission2ID = TEXT("M2_SpecWriting");
 const FName URANDCampaignDirector::Mission3ID = TEXT("M3_ParkStation");
 const FName URANDCampaignDirector::Mission4ID = TEXT("M4_Braai");
 const FName URANDCampaignDirector::Mission5ID = TEXT("M5_HawksAtTheDoor");
+const FName URANDCampaignDirector::Mission6ID = TEXT("M6_CityDeep");
+const FName URANDCampaignDirector::Mission7ID = TEXT("M7_FleetTender");
+const FName URANDCampaignDirector::Mission8ID = TEXT("M8_NPA");
 
 URANDCampaignDirector::URANDCampaignDirector()
 {
@@ -74,6 +78,10 @@ void URANDCampaignDirector::SeedStartingLife()
 			Biz->AddBusiness(VCP);
 		}
 	}
+	if (URANDInventoryComponent* Inv = Player->GetInventoryComponent())
+	{
+		Inv->AddItem(ERANDItem::TenderDossier);
+	}
 }
 
 void URANDCampaignDirector::EnsureConsultationExists()
@@ -103,7 +111,10 @@ void URANDCampaignDirector::HandleMissionComplete(FName MissionID)
 	else if (MissionID == Mission2ID) { ActIndex = 3; StartMission3(); }
 	else if (MissionID == Mission3ID) { ActIndex = 4; StartMission4(); }
 	else if (MissionID == Mission4ID) { ActIndex = 5; StartMission5(); }
-	else if (MissionID == Mission5ID) { FinishCampaign(); }
+	else if (MissionID == Mission5ID) { FinishAct1(); }
+	else if (MissionID == Mission6ID) { ActIndex = 7; StartMission7(); }
+	else if (MissionID == Mission7ID) { ActIndex = 8; StartMission8(); }
+	else if (MissionID == Mission8ID) { FinishAct2(); }
 }
 
 void URANDCampaignDirector::StartMission2()
@@ -165,7 +176,7 @@ void URANDCampaignDirector::StartMission5()
 		FText::FromString(TEXT("Go dark (F6)")), TEXT("M5_Dark"));
 }
 
-void URANDCampaignDirector::FinishCampaign()
+void URANDCampaignDirector::FinishAct1()
 {
 	ARANDCharacter* Player = Cast<ARANDCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0));
 	if (!Player || !Player->GetCareerComponent()) return;
@@ -178,8 +189,10 @@ void URANDCampaignDirector::FinishCampaign()
 	{
 		Ending = ERANDEnding::Destroyed;
 		Send(TEXT("Advocate Naidoo"), FText::FromString(TEXT("They're at Marshalltown. Don't come in. The city does not belong to you.")));
+		Career->ResolveEnding(Ending);
+		return;
 	}
-	else if (bGrey && Cash >= 200000.f)
+	if (bGrey && Cash >= 200000.f)
 	{
 		Ending = ERANDEnding::StateCapture;
 		Career->SetStage(ERANDCareerStage::Operator);
@@ -189,9 +202,67 @@ void URANDCampaignDirector::FinishCampaign()
 	{
 		Ending = ERANDEnding::Legitimate;
 		Career->SetStage(ERANDCareerStage::Player);
-		Send(TEXT("Sipho Dlamini"), FText::FromString(TEXT("You didn't take the short road. The money is smaller. You still sleep.")));
+		Send(TEXT("Sipho Dlamini"), FText::FromString(TEXT("You didn't take the short road. The money is smaller. You still sleep. Act 2 is still a warehouse in City Deep.")));
 	}
-	Career->ResolveEnding(Ending);
+	Career->ResolveEnding(ERANDEnding::None);
+	ActIndex = 6;
+	StartMission6();
+}
+
+void URANDCampaignDirector::StartMission6()
+{
+	FRANDMission M; M.MissionID = Mission6ID; M.MissionName = FText::FromString(TEXT("City Deep"));
+	FRANDObjective O; O.ObjectiveText = FText::FromString(TEXT("Decide on the warehouse")); M.Objectives.Add(O);
+	if (URANDMissionManager* Missions = URANDMissionManager::Get(this)) { Missions->RegisterMission(M); Missions->StartMission(Mission6ID); }
+	SendChoice(TEXT("Bra Mike"), FText::FromString(TEXT("There's a unit in City Deep. R200k. You own the boxes that leave Pretoria. Or stay a passenger.")),
+		FText::FromString(TEXT("Buy the warehouse — R200,000")), TEXT("M6_Buy"),
+		FText::FromString(TEXT("Stay a passenger")), TEXT("M6_Skip"));
+}
+
+void URANDCampaignDirector::StartMission7()
+{
+	FRANDMission M; M.MissionID = Mission7ID; M.MissionName = FText::FromString(TEXT("Municipal Fleet"));
+	FRANDObjective O; O.ObjectiveText = FText::FromString(TEXT("Talk to Thandi about the fleet tender")); M.Objectives.Add(O);
+	if (URANDMissionManager* Missions = URANDMissionManager::Get(this)) { Missions->RegisterMission(M); Missions->StartMission(Mission7ID); }
+	Send(TEXT("Thandi Mokoena"), FText::FromString(TEXT("Tshwane is replacing eighty bakkies. I can write the engine spec around one supplier. Come.")));
+	SpawnTalkObjective(TEXT("Thandi Mokoena"), FText::FromString(TEXT("The fleet is yours if the paper looks boring. Boring is expensive." )), Mission7ID);
+}
+
+void URANDCampaignDirector::StartMission8()
+{
+	FRANDMission M; M.MissionID = Mission8ID; M.MissionName = FText::FromString(TEXT("The Docket"));
+	FRANDObjective O; O.ObjectiveText = FText::FromString(TEXT("Answer the NPA")); M.Objectives.Add(O);
+	if (URANDMissionManager* Missions = URANDMissionManager::Get(this)) { Missions->RegisterMission(M); Missions->StartMission(Mission8ID); }
+	SendChoice(TEXT("Advocate Naidoo"), FText::FromString(TEXT("Pretoria wants a preservation order. R250k buys time. Or you fight it in the papers and on the street.")),
+		FText::FromString(TEXT("Pay R250,000 — bury the docket")), TEXT("M8_Pay"),
+		FText::FromString(TEXT("Fight it")), TEXT("M8_Fight"));
+}
+
+void URANDCampaignDirector::FinishAct2()
+{
+	ARANDCharacter* Player = Cast<ARANDCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0));
+	if (!Player || !Player->GetCareerComponent()) return;
+	const float Cash = Player->GetEconomyComponent() ? Player->GetEconomyComponent()->GetBalance() : 0.f;
+	const bool bOwnsYard = Player->GetInventoryComponent() && Player->GetInventoryComponent()->HasItem(ERANDItem::WarehouseKey);
+	const EHeatLevel Peak = Player->GetWantedComponent() ? Player->GetWantedComponent()->GetPeakHeatLevel() : EHeatLevel::None;
+	ERANDEnding Ending = ERANDEnding::Legitimate;
+	if (Peak >= EHeatLevel::Burned)
+	{
+		Ending = ERANDEnding::Destroyed;
+		Send(TEXT("Advocate Naidoo"), FText::FromString(TEXT("Preservation order granted. The warehouse is a crime scene.")));
+	}
+	else if (bOwnsYard && Cash >= 150000.f)
+	{
+		Ending = ERANDEnding::StateCapture;
+		Player->GetCareerComponent()->SetStage(ERANDCareerStage::Untouchable);
+		Send(TEXT("Thandi Mokoena"), FText::FromString(TEXT("You don't bid anymore. You decide who bids. The city is a ledger with your name on the last line.")));
+	}
+	else
+	{
+		Ending = ERANDEnding::Legitimate;
+		Send(TEXT("Sipho Dlamini"), FText::FromString(TEXT("Still standing. Still small enough to leave. That's not nothing.")));
+	}
+	Player->GetCareerComponent()->ResolveEnding(Ending);
 }
 
 void URANDCampaignDirector::SpawnTalkObjective(const FString& NPCName, const FText& Line, FName)
@@ -249,6 +320,13 @@ void URANDCampaignDirector::CompleteActiveTalk()
 		if (URANDSARSComponent* SARS = URANDSARSComponent::Get(this)) Payout = SARS->Adjust(Payout);
 		Player->GetEconomyComponent()->AddFunds(Payout, Player->bAcceptedBribe ? TEXT("Tender: Tshwane clinic upgrade") : TEXT("Facilitation fee: Tshwane roads"));
 	}
+	if (ActIndex == 7 && Player->GetEconomyComponent())
+	{
+		float Payout = Player->bAcceptedBribe ? 320000.f : 64000.f;
+		if (URANDSARSComponent* SARS = URANDSARSComponent::Get(this)) Payout = SARS->Adjust(Payout);
+		Player->GetEconomyComponent()->AddFunds(Payout, TEXT("Municipal fleet facilitation"));
+		if (Player->GetWantedComponent() && Player->bAcceptedBribe) Player->GetWantedComponent()->AddHeat(EAgency::Hawks, 14.f);
+	}
 }
 
 void URANDCampaignDirector::HandlePhoneOption(FName ActionId)
@@ -267,6 +345,11 @@ void URANDCampaignDirector::HandlePhoneOption(FName ActionId)
 				Biz->AddBusiness(Route);
 			}
 			if (URANDCombatComponent* Combat = Player->GetCombatComponent()) Combat->SetArmed(true);
+			if (URANDInventoryComponent* Inv = Player->GetInventoryComponent())
+			{
+				Inv->AddItem(ERANDItem::Sidearm);
+				Inv->AddItem(ERANDItem::BurnerPhone);
+			}
 			if (URANDReputationComponent* Rep = Player->GetReputationComponent()) Rep->AddStanding(ERANDContact::RankMarshal, 40.f);
 			if (Player->GetWantedComponent()) Player->GetWantedComponent()->AddHeat(EAgency::Rivals, 12.f);
 			Send(TEXT("Bra Mike"), FText::FromString(TEXT("You're on the board. There's a piece in the cubby if the corridor gets ugly.")));
@@ -294,6 +377,47 @@ void URANDCampaignDirector::HandlePhoneOption(FName ActionId)
 	{
 		if (URANDCareerComponent* Career = Player->GetCareerComponent()) Career->GoDark();
 		if (URANDMissionManager* Missions = URANDMissionManager::Get(this)) Missions->CompleteObjective(Mission5ID, 0);
+	}
+	else if (ActionId == TEXT("M6_Buy"))
+	{
+		const bool bPaid = Player->GetEconomyComponent() && Player->GetEconomyComponent()->DeductFunds(200000.f, TEXT("City Deep warehouse"));
+		if (bPaid)
+		{
+			if (URANDBusinessManager* Biz = Player->GetBusinessManager())
+			{
+				FRANDBusiness Yard; Yard.BusinessName = TEXT("City Deep Bonded Store");
+				Yard.BusinessType = ERANDBusinessType::Black; Yard.PassiveIncomePerHour = 9800.f; Yard.HeatGenerationRate = 3.0f; Yard.bIsActive = true;
+				Biz->AddBusiness(Yard);
+			}
+			if (URANDInventoryComponent* Inv = Player->GetInventoryComponent()) Inv->AddItem(ERANDItem::WarehouseKey);
+			if (Player->GetWantedComponent()) Player->GetWantedComponent()->AddHeat(EAgency::Hawks, 10.f);
+			Send(TEXT("Bra Mike"), FText::FromString(TEXT("Keys are in the lockbox. Don't keep a book.")));
+		}
+		else Send(TEXT("Bra Mike"), FText::FromString(TEXT("Price is the price. Come back liquid.")));
+		if (URANDMissionManager* Missions = URANDMissionManager::Get(this)) Missions->CompleteObjective(Mission6ID, 0);
+	}
+	else if (ActionId == TEXT("M6_Skip"))
+	{
+		Send(TEXT("Bra Mike"), FText::FromString(TEXT("Passenger it is.")));
+		if (URANDMissionManager* Missions = URANDMissionManager::Get(this)) Missions->CompleteObjective(Mission6ID, 0);
+	}
+	else if (ActionId == TEXT("M8_Pay"))
+	{
+		if (Player->GetEconomyComponent() && Player->GetEconomyComponent()->DeductFunds(250000.f, TEXT("NPA preservation stall")))
+		{
+			if (UWantedComponent* Wanted = Player->GetWantedComponent())
+			{
+				Wanted->SetHeat(EAgency::Hawks, FMath::Max(0.f, Wanted->GetRawHeat(EAgency::Hawks) - 40.f));
+			}
+			Send(TEXT("Advocate Naidoo"), FText::FromString(TEXT("The order will miss the roll. For now.")));
+		}
+		if (URANDMissionManager* Missions = URANDMissionManager::Get(this)) Missions->CompleteObjective(Mission8ID, 0);
+	}
+	else if (ActionId == TEXT("M8_Fight"))
+	{
+		if (Player->GetWantedComponent()) Player->GetWantedComponent()->AddHeat(EAgency::Hawks, 22.f);
+		Send(TEXT("Advocate Naidoo"), FText::FromString(TEXT("Then we fight it in open court. They will use your name.")));
+		if (URANDMissionManager* Missions = URANDMissionManager::Get(this)) Missions->CompleteObjective(Mission8ID, 0);
 	}
 }
 
