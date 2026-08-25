@@ -5,6 +5,7 @@
 #include "RANDProperty.h"
 #include "RANDTenderDesk.h"
 #include "RANDNPCSpawner.h"
+#include "RANDAmmoCrate.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
 #include "TimerManager.h"
@@ -29,11 +30,12 @@ void URANDWorldSeeder::Seed()
 	ARANDCharacter* Player = Cast<ARANDCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0));
 	if (!World || !Player) return;
 
+	FActorSpawnParameters Params;
+	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
 	if (!UGameplayStatics::GetActorOfClass(this, ARANDProperty::StaticClass()))
 	{
 		const FVector Loc = Player->GetActorLocation() + FVector(900.0f, -200.0f, 200.0f);
-		FActorSpawnParameters Params;
-		Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 		if (ARANDProperty* Prop = World->SpawnActor<ARANDProperty>(ARANDProperty::StaticClass(), Loc, FRotator::ZeroRotator, Params))
 		{
 			Prop->PropertyName = TEXT("Marshalltown walk-up");
@@ -45,16 +47,18 @@ void URANDWorldSeeder::Seed()
 
 	if (!UGameplayStatics::GetActorOfClass(this, ARANDTenderDesk::StaticClass()))
 	{
-		const FVector Loc = Player->GetActorLocation() + FVector(350.0f, 250.0f, 40.0f);
-		FActorSpawnParameters Params;
-		Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-		World->SpawnActor<ARANDTenderDesk>(ARANDTenderDesk::StaticClass(), Loc, FRotator::ZeroRotator, Params);
+		World->SpawnActor<ARANDTenderDesk>(ARANDTenderDesk::StaticClass(),
+			Player->GetActorLocation() + FVector(350.0f, 250.0f, 40.0f), FRotator::ZeroRotator, Params);
+	}
+
+	if (!UGameplayStatics::GetActorOfClass(this, ARANDAmmoCrate::StaticClass()))
+	{
+		World->SpawnActor<ARANDAmmoCrate>(ARANDAmmoCrate::StaticClass(),
+			Player->GetActorLocation() + FVector(250.0f, -180.0f, 20.0f), FRotator::ZeroRotator, Params);
 	}
 
 	if (!UGameplayStatics::GetActorOfClass(this, ARANDNPCSpawner::StaticClass()))
 	{
-		FActorSpawnParameters Params;
-		Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 		if (ARANDNPCSpawner* Spawner = World->SpawnActor<ARANDNPCSpawner>(
 			ARANDNPCSpawner::StaticClass(), Player->GetActorLocation(), FRotator::ZeroRotator, Params))
 		{

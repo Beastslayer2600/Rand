@@ -41,7 +41,6 @@ void URANDCheatComponent::SetupInput()
 		ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer()))
 	{
 		CheatMappingContext = NewObject<UInputMappingContext>(this, TEXT("CheatMappingContext"));
-
 		auto MakeBool = [this](const TCHAR* Name)
 		{
 			UInputAction* Action = NewObject<UInputAction>(this, Name);
@@ -55,6 +54,7 @@ void URANDCheatComponent::SetupInput()
 		HeatAction = MakeBool(TEXT("IA_ClearHeat"));
 		Choice1Action = MakeBool(TEXT("IA_Phone1"));
 		Choice2Action = MakeBool(TEXT("IA_Phone2"));
+		ReloadAction = MakeBool(TEXT("IA_Reload"));
 
 		CheatMappingContext->MapKey(CashAction, EKeys::F8);
 		CheatMappingContext->MapKey(ArmAction, EKeys::F10);
@@ -62,6 +62,7 @@ void URANDCheatComponent::SetupInput()
 		CheatMappingContext->MapKey(HeatAction, EKeys::F12);
 		CheatMappingContext->MapKey(Choice1Action, EKeys::One);
 		CheatMappingContext->MapKey(Choice2Action, EKeys::Two);
+		CheatMappingContext->MapKey(ReloadAction, EKeys::R);
 
 		Subsystem->AddMappingContext(CheatMappingContext, 4);
 
@@ -73,6 +74,7 @@ void URANDCheatComponent::SetupInput()
 			EIC->BindAction(HeatAction, ETriggerEvent::Started, this, &URANDCheatComponent::ClearHeat);
 			EIC->BindAction(Choice1Action, ETriggerEvent::Started, this, &URANDCheatComponent::PhoneChoice1);
 			EIC->BindAction(Choice2Action, ETriggerEvent::Started, this, &URANDCheatComponent::PhoneChoice2);
+			EIC->BindAction(ReloadAction, ETriggerEvent::Started, this, &URANDCheatComponent::ReloadWeapon);
 		}
 	}
 }
@@ -81,10 +83,7 @@ void URANDCheatComponent::GiveCash()
 {
 	if (ARANDCharacter* Player = Cast<ARANDCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0)))
 	{
-		if (URANDEconomyComponent* Econ = Player->GetEconomyComponent())
-		{
-			Econ->AddFunds(50000.0f, TEXT("Playtest float"));
-		}
+		if (URANDEconomyComponent* Econ = Player->GetEconomyComponent()) Econ->AddFunds(50000.0f, TEXT("Playtest float"));
 	}
 }
 
@@ -92,8 +91,20 @@ void URANDCheatComponent::ArmPlayer()
 {
 	if (ARANDCharacter* Player = Cast<ARANDCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0)))
 	{
-		if (URANDCombatComponent* Combat = Player->GetCombatComponent()) Combat->SetArmed(true);
+		if (URANDCombatComponent* Combat = Player->GetCombatComponent())
+		{
+			Combat->SetArmed(true);
+			Combat->AddReserve(24);
+		}
 		if (URANDInventoryComponent* Inv = Player->GetInventoryComponent()) Inv->AddItem(ERANDItem::Sidearm);
+	}
+}
+
+void URANDCheatComponent::ReloadWeapon()
+{
+	if (ARANDCharacter* Player = Cast<ARANDCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0)))
+	{
+		if (URANDCombatComponent* Combat = Player->GetCombatComponent()) Combat->Reload();
 	}
 }
 
@@ -119,8 +130,5 @@ void URANDCheatComponent::PhoneChoice2() { PickPhoneOption(1); }
 
 void URANDCheatComponent::PickPhoneOption(int32 Index)
 {
-	if (URANDPhoneWidget* Phone = URANDPhoneWidget::GetPhone(this))
-	{
-		Phone->ChooseOptionByIndex(Index);
-	}
+	if (URANDPhoneWidget* Phone = URANDPhoneWidget::GetPhone(this)) Phone->ChooseOptionByIndex(Index);
 }
