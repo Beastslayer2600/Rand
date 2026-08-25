@@ -11,6 +11,8 @@
 #include "UObject/ConstructorHelpers.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
+#include "Engine/World.h"
+#include "TimerManager.h"
 
 #include "InteractionComponent.h"
 #include "HealthComponent.h"
@@ -135,7 +137,12 @@ void ARANDCharacter::ConfigureInputMappings()
 void ARANDCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	RespawnLocation = GetActorLocation();
 	ConfigureInputMappings();
+	if (HealthComponent)
+	{
+		HealthComponent->OnDeath.AddDynamic(this, &ARANDCharacter::HandleDeath);
+	}
 	if (APlayerController* PC = Cast<APlayerController>(GetController()))
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
@@ -143,6 +150,27 @@ void ARANDCharacter::BeginPlay()
 		{
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
+	}
+}
+
+void ARANDCharacter::HandleDeath()
+{
+	if (EconomyComponent)
+	{
+		EconomyComponent->DeductFunds(FMath::Min(5000.0f, EconomyComponent->GetBalance()), TEXT("Hospital / fixer"));
+	}
+	if (WantedComponent)
+	{
+		WantedComponent->AddHeat(EAgency::SAPS, 10.0f);
+	}
+	if (UWorld* World = GetWorld())
+	{
+		FTimerHandle ReviveTimer;
+		World->GetTimerManager().SetTimer(ReviveTimer, [this]()
+		{
+			SetActorLocation(RespawnLocation);
+			if (HealthComponent) HealthComponent->Revive();
+		}, 2.5f, false);
 	}
 }
 
@@ -180,27 +208,8 @@ void ARANDCharacter::Look(const FInputActionValue& Value)
 	AddControllerPitchInput(Axis.Y);
 }
 
-void ARANDCharacter::StartSprint(const FInputActionValue&)
-{
-	GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
-}
-
-void ARANDCharacter::StopSprint(const FInputActionValue&)
-{
-	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
-}
-
-void ARANDCharacter::HandleFire(const FInputActionValue&)
-{
-	if (CombatComponent) CombatComponent->Fire();
-}
-
-void ARANDCharacter::HandleGoDark(const FInputActionValue&)
-{
-	if (CareerComponent) CareerComponent->GoDark();
-}
-
-void ARANDCharacter::HandleFileTaxes(const FInputActionValue&)
-{
-	if (URANDSARSComponent* SARS = URANDSARSComponent::Get(this)) SARS->FileReturn();
-}
+void ARANDCharacter::StartSprint(const FInputActionValue&) { GetCharacterMovement()->MaxWalkSpeed = SprintSpeed; }
+void ARANDCharacter::StopSprint(const FInputActionValue&) { GetCharacterMovement()->MaxWalkSpeed = WalkSpeed; }
+void ARANDCharacter::HandleFire(const FInputActionValue&) { if (CombatComponent) CombatComponent->Fire(); }
+void ARANDCharacter::HandleGoDark(const FInputActionValue&) { if (CareerComponent) CareerComponent->GoDark(); }
+void ARANDCharacter::HandleFileTaxes(const FInputActionValue&) { if (URANDSARSComponent* SARS = URANDSARSComponent::Get(this)) SARS->FileReturn(); }
