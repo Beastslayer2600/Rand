@@ -15,6 +15,7 @@ class URANDWantedResponseComponent;
 class URANDSARSComponent;
 class URANDCheatComponent;
 class URANDSideHustleComponent;
+class URANDWorldBootstrap;
 
 UCLASS()
 class RAND_API ARANDGameMode : public AGameModeBase
@@ -78,4 +79,7 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Jobs", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<URANDSideHustleComponent> SideHustle;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<URANDWorldBootstrap> WorldBootstrap;
 };
