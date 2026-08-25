@@ -12,7 +12,7 @@
 #include "RANDSARSComponent.h"
 #include "RANDCheatComponent.h"
 #include "RANDSideHustleComponent.h"
-#include "RANDWorldBootstrap.h"
+#include "RANDWorldSeeder.h"
 
 ARANDGameMode::ARANDGameMode()
 {
@@ -27,5 +27,5 @@ ARANDGameMode::ARANDGameMode()
 	SARSComponent    = CreateDefaultSubobject<URANDSARSComponent>(TEXT("SARSComponent"));
 	CheatComponent   = CreateDefaultSubobject<URANDCheatComponent>(TEXT("CheatComponent"));
 	SideHustle       = CreateDefaultSubobject<URANDSideHustleComponent>(TEXT("SideHustle"));
-	WorldBootstrap   = CreateDefaultSubobject<URANDWorldBootstrap>(TEXT("WorldBootstrap"));
+	WorldSeeder      = CreateDefaultSubobject<URANDWorldSeeder>(TEXT("WorldSeeder"));
 }
