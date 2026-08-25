@@ -127,6 +127,10 @@ protected:
 	void HandleGoDark(const FInputActionValue& Value);
 	void HandleFileTaxes(const FInputActionValue& Value);
 
+	UFUNCTION()
+	void HandleDeath();
+
 private:
 	void ConfigureInputMappings();
+	FVector RespawnLocation = FVector::ZeroVector;
 };
