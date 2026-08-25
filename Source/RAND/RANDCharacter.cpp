@@ -17,6 +17,10 @@
 #include "WantedComponent.h"
 #include "EconomyComponent.h"
 #include "BusinessManager.h"
+#include "RANDCareerComponent.h"
+#include "RANDReputationComponent.h"
+#include "RANDCombatComponent.h"
+#include "RANDSARSComponent.h"
 
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
@@ -29,26 +33,21 @@ ARANDCharacter::ARANDCharacter()
 {
 	PrimaryActorTick.bCanEverTick = false;
 
-	// Collision capsule sized for an adult male.
 	GetCapsuleComponent()->InitCapsuleSize(42.0f, 96.0f);
 
-	// The controller's yaw drives movement direction, not the mesh's facing.
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
 
 	UCharacterMovementComponent* Movement = GetCharacterMovement();
-	Movement->bOrientRotationToMovement = true;            // Face the direction of travel.
-	Movement->RotationRate = FRotator(0.0f, 500.0f, 0.0f); // Deliberate turn — weighty, not snappy.
+	Movement->bOrientRotationToMovement = true;
+	Movement->RotationRate = FRotator(0.0f, 500.0f, 0.0f);
 	Movement->MaxWalkSpeed = WalkSpeed;
 	Movement->MinAnalogWalkSpeed = 20.0f;
 	Movement->BrakingDecelerationWalking = 1500.0f;
 	Movement->JumpZVelocity = 420.0f;
 	Movement->AirControl = 0.2f;
 
-	// Placeholder visual: the engine "Manny" mannequin so movement is visible
-	// during play-tests. André's real look is a MetaHuman (per GDD) — this is
-	// a throwaway stand-in in reference pose (no locomotion anims yet).
 	GetMesh()->SetRelativeLocation(FVector(0.0f, 0.0f, -90.0f));
 	GetMesh()->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
 	static ConstructorHelpers::FObjectFinder<USkeletalMesh> PlaceholderMesh(
@@ -58,10 +57,6 @@ ARANDCharacter::ARANDCharacter()
 		GetMesh()->SetSkeletalMeshAsset(PlaceholderMesh.Object);
 	}
 
-	// Locomotion AnimBP — ABP_Andre, parented to URANDAnimInstance (our C++
-	// driver). Replaces the MoverExamples ABP_Manny, which is Mover-coupled and
-	// won't animate a CharacterMovement-based pawn. The AnimGraph blends the
-	// Manny idle/walk/run/jump anims off GroundSpeed + bIsInAir.
 	static ConstructorHelpers::FClassFinder<UAnimInstance> LocomotionABP(
 		TEXT("/Game/Characters/ABP_Andre.ABP_Andre_C"));
 	if (LocomotionABP.Succeeded())
@@ -70,7 +65,6 @@ ARANDCharacter::ARANDCharacter()
 		GetMesh()->SetAnimInstanceClass(LocomotionABP.Class);
 	}
 
-	// Camera boom: trails behind André and collides with world geometry.
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
 	CameraBoom->TargetArmLength = 350.0f;
@@ -80,8 +74,6 @@ ARANDCharacter::ARANDCharacter()
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
 
-	// Author the Enhanced Input assets in code so the project is playable with
-	// no editor setup. These can be replaced by designer-authored data assets.
 	DefaultMappingContext = CreateDefaultSubobject<UInputMappingContext>(TEXT("DefaultMappingContext"));
 
 	MoveAction = CreateDefaultSubobject<UInputAction>(TEXT("IA_Move"));
@@ -96,22 +88,29 @@ ARANDCharacter::ARANDCharacter()
 	SprintAction = CreateDefaultSubobject<UInputAction>(TEXT("IA_Sprint"));
 	SprintAction->ValueType = EInputActionValueType::Boolean;
 
+	FireAction = CreateDefaultSubobject<UInputAction>(TEXT("IA_Fire"));
+	FireAction->ValueType = EInputActionValueType::Boolean;
+
+	GoDarkAction = CreateDefaultSubobject<UInputAction>(TEXT("IA_GoDark"));
+	GoDarkAction->ValueType = EInputActionValueType::Boolean;
+
+	FileTaxesAction = CreateDefaultSubobject<UInputAction>(TEXT("IA_FileTaxes"));
+	FileTaxesAction->ValueType = EInputActionValueType::Boolean;
+
 	InteractionComponent = CreateDefaultSubobject<UInteractionComponent>(TEXT("InteractionComponent"));
 	HealthComponent      = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComponent"));
 	WantedComponent      = CreateDefaultSubobject<UWantedComponent>(TEXT("WantedComponent"));
 	EconomyComponent     = CreateDefaultSubobject<URANDEconomyComponent>(TEXT("EconomyComponent"));
 	BusinessManager      = CreateDefaultSubobject<URANDBusinessManager>(TEXT("BusinessManager"));
+	CareerComponent      = CreateDefaultSubobject<URANDCareerComponent>(TEXT("CareerComponent"));
+	ReputationComponent  = CreateDefaultSubobject<URANDReputationComponent>(TEXT("ReputationComponent"));
+	CombatComponent      = CreateDefaultSubobject<URANDCombatComponent>(TEXT("CombatComponent"));
 }
 
 void ARANDCharacter::ConfigureInputMappings()
 {
-	if (!DefaultMappingContext)
-	{
-		return;
-	}
+	if (!DefaultMappingContext) return;
 
-	// WASD -> 2D move axis. A key contributes to X by default; we negate and
-	// swizzle (X<->Y) to compose forward/back on Y and strafe on X.
 	auto MakeNegate = [this]() { return NewObject<UInputModifierNegate>(this); };
 	auto MakeSwizzleYXZ = [this]()
 	{
@@ -120,49 +119,23 @@ void ARANDCharacter::ConfigureInputMappings()
 		return Swizzle;
 	};
 
-	// Forward (W): swizzle X->Y, positive.
-	{
-		FEnhancedActionKeyMapping& M = DefaultMappingContext->MapKey(MoveAction, EKeys::W);
-		M.Modifiers.Add(MakeSwizzleYXZ());
-	}
-	// Back (S): swizzle X->Y, negated.
-	{
-		FEnhancedActionKeyMapping& M = DefaultMappingContext->MapKey(MoveAction, EKeys::S);
-		M.Modifiers.Add(MakeNegate());
-		M.Modifiers.Add(MakeSwizzleYXZ());
-	}
-	// Right (D): positive X.
-	{
-		DefaultMappingContext->MapKey(MoveAction, EKeys::D);
-	}
-	// Left (A): negated X.
-	{
-		FEnhancedActionKeyMapping& M = DefaultMappingContext->MapKey(MoveAction, EKeys::A);
-		M.Modifiers.Add(MakeNegate());
-	}
-
-	// Mouse look. MouseX -> yaw (X). MouseY -> pitch (Y), swizzled and negated
-	// so pushing the mouse forward looks up.
-	{
-		DefaultMappingContext->MapKey(LookAction, EKeys::MouseX);
-	}
-	{
-		FEnhancedActionKeyMapping& M = DefaultMappingContext->MapKey(LookAction, EKeys::MouseY);
-		M.Modifiers.Add(MakeNegate());
-		M.Modifiers.Add(MakeSwizzleYXZ());
-	}
-
-	// Jump (Space) and Sprint (Left Shift).
+	{ FEnhancedActionKeyMapping& M = DefaultMappingContext->MapKey(MoveAction, EKeys::W); M.Modifiers.Add(MakeSwizzleYXZ()); }
+	{ FEnhancedActionKeyMapping& M = DefaultMappingContext->MapKey(MoveAction, EKeys::S); M.Modifiers.Add(MakeNegate()); M.Modifiers.Add(MakeSwizzleYXZ()); }
+	DefaultMappingContext->MapKey(MoveAction, EKeys::D);
+	{ FEnhancedActionKeyMapping& M = DefaultMappingContext->MapKey(MoveAction, EKeys::A); M.Modifiers.Add(MakeNegate()); }
+	DefaultMappingContext->MapKey(LookAction, EKeys::MouseX);
+	{ FEnhancedActionKeyMapping& M = DefaultMappingContext->MapKey(LookAction, EKeys::MouseY); M.Modifiers.Add(MakeNegate()); M.Modifiers.Add(MakeSwizzleYXZ()); }
 	DefaultMappingContext->MapKey(JumpAction, EKeys::SpaceBar);
 	DefaultMappingContext->MapKey(SprintAction, EKeys::LeftShift);
+	DefaultMappingContext->MapKey(FireAction, EKeys::LeftMouseButton);
+	DefaultMappingContext->MapKey(GoDarkAction, EKeys::F6);
+	DefaultMappingContext->MapKey(FileTaxesAction, EKeys::F7);
 }
 
 void ARANDCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
 	ConfigureInputMappings();
-
 	if (APlayerController* PC = Cast<APlayerController>(GetController()))
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
@@ -176,55 +149,58 @@ void ARANDCharacter::BeginPlay()
 void ARANDCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
 	if (UEnhancedInputComponent* EnhancedInput = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
 		EnhancedInput->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ARANDCharacter::Move);
 		EnhancedInput->BindAction(LookAction, ETriggerEvent::Triggered, this, &ARANDCharacter::Look);
-
 		EnhancedInput->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
 		EnhancedInput->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
-
 		EnhancedInput->BindAction(SprintAction, ETriggerEvent::Started, this, &ARANDCharacter::StartSprint);
 		EnhancedInput->BindAction(SprintAction, ETriggerEvent::Completed, this, &ARANDCharacter::StopSprint);
+		EnhancedInput->BindAction(FireAction, ETriggerEvent::Started, this, &ARANDCharacter::HandleFire);
+		EnhancedInput->BindAction(GoDarkAction, ETriggerEvent::Started, this, &ARANDCharacter::HandleGoDark);
+		EnhancedInput->BindAction(FileTaxesAction, ETriggerEvent::Started, this, &ARANDCharacter::HandleFileTaxes);
 	}
 }
 
 void ARANDCharacter::Move(const FInputActionValue& Value)
 {
 	const FVector2D Axis = Value.Get<FVector2D>();
-	if (!Controller || Axis.IsNearlyZero())
-	{
-		return;
-	}
-
-	// Movement is relative to the camera yaw, projected onto the ground plane.
+	if (!Controller || Axis.IsNearlyZero()) return;
 	const FRotator YawRotation(0.0f, Controller->GetControlRotation().Yaw, 0.0f);
-	const FVector Forward = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-	const FVector Right = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-
-	AddMovementInput(Forward, Axis.Y);
-	AddMovementInput(Right, Axis.X);
+	AddMovementInput(FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X), Axis.Y);
+	AddMovementInput(FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y), Axis.X);
 }
 
 void ARANDCharacter::Look(const FInputActionValue& Value)
 {
 	const FVector2D Axis = Value.Get<FVector2D>();
-	if (!Controller)
-	{
-		return;
-	}
-
+	if (!Controller) return;
 	AddControllerYawInput(Axis.X);
 	AddControllerPitchInput(Axis.Y);
 }
 
-void ARANDCharacter::StartSprint(const FInputActionValue& Value)
+void ARANDCharacter::StartSprint(const FInputActionValue&)
 {
 	GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
 }
 
-void ARANDCharacter::StopSprint(const FInputActionValue& Value)
+void ARANDCharacter::StopSprint(const FInputActionValue&)
 {
 	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+}
+
+void ARANDCharacter::HandleFire(const FInputActionValue&)
+{
+	if (CombatComponent) CombatComponent->Fire();
+}
+
+void ARANDCharacter::HandleGoDark(const FInputActionValue&)
+{
+	if (CareerComponent) CareerComponent->GoDark();
+}
+
+void ARANDCharacter::HandleFileTaxes(const FInputActionValue&)
+{
+	if (URANDSARSComponent* SARS = URANDSARSComponent::Get(this)) SARS->FileReturn();
 }
