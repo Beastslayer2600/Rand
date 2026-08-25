@@ -6,7 +6,6 @@
 #include "BusinessManager.h"
 #include "WantedComponent.h"
 #include "RANDCareerComponent.h"
-#include "RANDInventoryComponent.h"
 #include "RANDMissionManager.h"
 #include "RANDPhoneWidget.h"
 #include "Kismet/GameplayStatics.h"
@@ -30,21 +29,29 @@ void URANDAct3Director::BeginPlay()
 
 void URANDAct3Director::Bind()
 {
-	bool bReady = false;
-	if (URANDMissionManager* Missions = URANDMissionManager::Get(this))
+	if (!bMissionsBound)
 	{
-		Missions->OnMissionComplete.AddDynamic(this, &URANDAct3Director::HandleMissionComplete);
-		bReady = true;
+		if (URANDMissionManager* Missions = URANDMissionManager::Get(this))
+		{
+			Missions->OnMissionComplete.AddDynamic(this, &URANDAct3Director::HandleMissionComplete);
+			bMissionsBound = true;
+		}
 	}
-	if (URANDPhoneWidget* Phone = URANDPhoneWidget::GetPhone(this))
+	if (!bPhoneBound)
 	{
-		Phone->OnMessageOptionSelected.AddDynamic(this, &URANDAct3Director::HandlePhoneOption);
+		if (URANDPhoneWidget* Phone = URANDPhoneWidget::GetPhone(this))
+		{
+			Phone->OnMessageOptionSelected.AddDynamic(this, &URANDAct3Director::HandlePhoneOption);
+			bPhoneBound = true;
+		}
 	}
-	else if (UWorld* World = GetWorld())
+	if (!bPhoneBound)
 	{
-		World->GetTimerManager().SetTimer(BindTimer, this, &URANDAct3Director::Bind, 0.5f, false);
+		if (UWorld* World = GetWorld())
+		{
+			World->GetTimerManager().SetTimer(BindTimer, this, &URANDAct3Director::Bind, 0.5f, false);
+		}
 	}
-	(void)bReady;
 }
 
 void URANDAct3Director::HandleMissionComplete(FName MissionID)
@@ -61,7 +68,7 @@ void URANDAct3Director::StartMission9()
 	FRANDObjective O; O.ObjectiveText = FText::FromString(TEXT("Take or refuse the Berea floor")); M.Objectives.Add(O);
 	if (URANDMissionManager* Missions = URANDMissionManager::Get(this)) { Missions->RegisterMission(M); Missions->StartMission(Mission9ID); }
 	SendChoice(TEXT("Unknown number"),
-		FText::FromString(TEXT("Ponte. Whole floor. R350k. You see the CBD from the window and nobody sees you." )),
+		FText::FromString(TEXT("Ponte. Whole floor. R350k. You see the CBD from the window and nobody sees you.")),
 		FText::FromString(TEXT("Buy the floor — R350,000")), TEXT("M9_Buy"),
 		FText::FromString(TEXT("Leave Berea alone")), TEXT("M9_Skip"));
 }
@@ -72,7 +79,7 @@ void URANDAct3Director::StartMission10()
 	FRANDObjective O; O.ObjectiveText = FText::FromString(TEXT("Answer Interpol through Naidoo")); M.Objectives.Add(O);
 	if (URANDMissionManager* Missions = URANDMissionManager::Get(this)) { Missions->RegisterMission(M); Missions->StartMission(Mission10ID); }
 	SendChoice(TEXT("Advocate Naidoo"),
-		FText::FromString(TEXT("Lyon asked Pretoria for a file. I can lose the request for R300k. Or we let it land." )),
+		FText::FromString(TEXT("Lyon asked Pretoria for a file. I can lose the request for R300k. Or we let it land.")),
 		FText::FromString(TEXT("Pay R300,000 — lose the request")), TEXT("M10_Pay"),
 		FText::FromString(TEXT("Let it land")), TEXT("M10_Land"));
 }
@@ -83,7 +90,7 @@ void URANDAct3Director::StartMission11()
 	FRANDObjective O; O.ObjectiveText = FText::FromString(TEXT("Take the appointment or walk")); M.Objectives.Add(O);
 	if (URANDMissionManager* Missions = URANDMissionManager::Get(this)) { Missions->RegisterMission(M); Missions->StartMission(Mission11ID); }
 	SendChoice(TEXT("Thandi Mokoena"),
-		FText::FromString(TEXT("There is a seat on the procurement council. You don't apply. You are appointed. Or you stay a contractor." )),
+		FText::FromString(TEXT("There is a seat on the procurement council. You don't apply. You are appointed. Or you stay a contractor.")),
 		FText::FromString(TEXT("Take the seat")), TEXT("M11_Seat"),
 		FText::FromString(TEXT("Stay a contractor")), TEXT("M11_Walk"));
 }
