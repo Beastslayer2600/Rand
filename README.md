@@ -18,42 +18,42 @@ Needs a NavMesh in the test level for NPC patrol and SAPS pursuit.
 
 | Input | Action |
 | --- | --- |
-| WASD | Move (camera-relative) |
+| WASD | Move |
 | Mouse | Look |
 | Space | Jump |
 | Left Shift | Sprint |
 | E | Interact |
 | Tab / Esc | Phone on / off |
-| Left mouse | Fire (after Park Station arms you) |
+| 1 / 2 | Pick a phone reply |
+| Left mouse | Fire (after Park Station or F10) |
 | F5 / F9 | Save / load |
-| F6 | Go dark (R25,000 — clears SAPS, pauses black businesses) |
+| F6 | Go dark (R25,000) |
 | F7 | File a SARS return (15% of cash) |
+| F8 | Playtest: +R50,000 |
+| F10 | Playtest: arm |
+| F11 | Playtest: complete current objective |
+| F12 | Playtest: clear heat |
 
 Walk 400 cm/s, sprint 650 cm/s (GTA IV weight).
 
-## Act 1 campaign (playable now)
+## Campaign now
 
-The campaign director lives on the game mode. It seeds **Venter Consulting & Procurement** plus R125,000 operating capital, then chains:
+Director seeds **Venter Consulting & Procurement** plus R125,000 and a tender dossier.
 
-1. **The Consultation** — Marshalltown tender. Thandi offers R85,000 to rig the committee.
-2. **Spec Writing** or **Clean Work** — grey path if you took the bribe; 8% facilitation if you didn't.
-3. **Park Station** — Bra Mike and the rank. Pay R40,000 for a corridor seat (grey logistics + sidearm) or walk.
-4. **The Braai** — Sipho. Standing, not a shootout.
-5. **Hawks at the Door** — Advocate Naidoo. Lawyer up (R120,000) or go dark.
+**Act 1**
+1. The Consultation — Thandi's R85k committee offer.
+2. Spec Writing or Clean Work.
+3. Park Station — R40k corridor seat, sidearm, burner.
+4. The Braai.
+5. Hawks at the Door — lawyer R120k or go dark.
 
-Endings:
+**Act 2** (starts unless you are Burned)
+6. City Deep — buy the warehouse for R200k or stay a passenger.
+7. Municipal fleet tender.
+8. NPA preservation order — bury it for R250k or fight.
 
-- **Stayed Clean** — you didn't take the short road.
-- **The City Is Yours** — bribe + cash still standing.
-- **Burned** — peak heat hit shoot-on-sight.
-
-Briefings and branches arrive on the in-game WhatsApp thread.
+Every four in-game hours a side hustle hits the phone (envelope, letter, taxi package, silence job).
 
 ## What this is not
 
-A finished GTA-scale game. Content in-repo is still the test box (`L_TestBox`) and a Manny stand-in. Play Act 1 there. The GDD still needs World Partition cities, MetaHumans, traffic, radio, NPA/Interpol tracks, Act 2-3, audio, and QA.
-
-## Notes
-
-- GDD targets UE 5.4; `RAND.uproject` is associated with **5.8**.
-- Git + Git LFS for `.uasset` / `.umap` and binary art/audio.
+A finished GTA-scale game. Maps are still `L_TestBox` and a Manny stand-in. World Partition cities, MetaHumans, traffic, radio, and Act 3 are still outstanding.
