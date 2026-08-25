@@ -13,6 +13,7 @@
 #include "RANDCheatComponent.h"
 #include "RANDSideHustleComponent.h"
 #include "RANDWorldSeeder.h"
+#include "RANDAct3Director.h"
 
 ARANDGameMode::ARANDGameMode()
 {
@@ -28,4 +29,5 @@ ARANDGameMode::ARANDGameMode()
 	CheatComponent   = CreateDefaultSubobject<URANDCheatComponent>(TEXT("CheatComponent"));
 	SideHustle       = CreateDefaultSubobject<URANDSideHustleComponent>(TEXT("SideHustle"));
 	WorldSeeder      = CreateDefaultSubobject<URANDWorldSeeder>(TEXT("WorldSeeder"));
+	Act3Director     = CreateDefaultSubobject<URANDAct3Director>(TEXT("Act3Director"));
 }
