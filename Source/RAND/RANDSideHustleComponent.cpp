@@ -9,6 +9,7 @@
 #include "RANDPhoneWidget.h"
 #include "RANDSARSComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Engine/Engine.h"
 #include "Engine/World.h"
 #include "TimerManager.h"
 
@@ -19,12 +20,11 @@ URANDSideHustleComponent::URANDSideHustleComponent()
 
 URANDSideHustleComponent* URANDSideHustleComponent::Get(const UObject* WorldContext)
 {
-	if (UWorld* World = GEngine ? GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::ReturnNull) : nullptr)
+	UWorld* World = WorldContext ? WorldContext->GetWorld() : nullptr;
+	if (!World) return nullptr;
+	if (ARANDGameMode* GM = World->GetAuthGameMode<ARANDGameMode>())
 	{
-		if (ARANDGameMode* GM = World->GetAuthGameMode<ARANDGameMode>())
-		{
-			return GM->GetSideHustle();
-		}
+		return GM->GetSideHustle();
 	}
 	return nullptr;
 }
