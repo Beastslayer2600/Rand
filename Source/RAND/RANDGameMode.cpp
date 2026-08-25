@@ -7,25 +7,19 @@
 #include "RANDSaveGameManager.h"
 #include "RANDMissionManager.h"
 #include "RANDWeatherComponent.h"
+#include "RANDCampaignDirector.h"
+#include "RANDWantedResponseComponent.h"
+#include "RANDSARSComponent.h"
 
 ARANDGameMode::ARANDGameMode()
 {
 	DefaultPawnClass = ARANDCharacter::StaticClass();
-
-	// The player controller spawns this HUD; its BeginPlay builds the UMG
-	// widget and binds it to André's health/heat/interaction components.
 	HUDClass = ARANDHUD::StaticClass();
-
-	// Authoritative session clock; economy, business accrual, and the HUD all
-	// read game time from here rather than running their own timers.
 	TimeComponent = CreateDefaultSubobject<URANDTimeComponent>(TEXT("TimeComponent"));
-
-	// Save/load: F5 manual save and an hourly auto-save.
 	SaveManager = CreateDefaultSubobject<URANDSaveGameManager>(TEXT("SaveManager"));
-
-	// Mission registry + flow.
 	MissionManager = CreateDefaultSubobject<URANDMissionManager>(TEXT("MissionManager"));
-
-	// Weather + load shedding, driven off the clock.
 	WeatherComponent = CreateDefaultSubobject<URANDWeatherComponent>(TEXT("WeatherComponent"));
+	CampaignDirector = CreateDefaultSubobject<URANDCampaignDirector>(TEXT("CampaignDirector"));
+	WantedResponse   = CreateDefaultSubobject<URANDWantedResponseComponent>(TEXT("WantedResponse"));
+	SARSComponent    = CreateDefaultSubobject<URANDSARSComponent>(TEXT("SARSComponent"));
 }
