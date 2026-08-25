@@ -14,6 +14,7 @@
 #include "RANDSideHustleComponent.h"
 #include "RANDWorldSeeder.h"
 #include "RANDAct3Director.h"
+#include "RANDNewsTicker.h"
 
 ARANDGameMode::ARANDGameMode()
 {
@@ -30,4 +31,5 @@ ARANDGameMode::ARANDGameMode()
 	SideHustle       = CreateDefaultSubobject<URANDSideHustleComponent>(TEXT("SideHustle"));
 	WorldSeeder      = CreateDefaultSubobject<URANDWorldSeeder>(TEXT("WorldSeeder"));
 	Act3Director     = CreateDefaultSubobject<URANDAct3Director>(TEXT("Act3Director"));
+	NewsTicker       = CreateDefaultSubobject<URANDNewsTicker>(TEXT("NewsTicker"));
 }

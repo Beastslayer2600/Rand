@@ -17,6 +17,7 @@ class URANDCheatComponent;
 class URANDSideHustleComponent;
 class URANDWorldSeeder;
 class URANDAct3Director;
+class URANDNewsTicker;
 
 UCLASS()
 class RAND_API ARANDGameMode : public AGameModeBase
@@ -48,4 +49,5 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Jobs", meta = (AllowPrivateAccess = "true")) TObjectPtr<URANDSideHustleComponent> SideHustle;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "World", meta = (AllowPrivateAccess = "true")) TObjectPtr<URANDWorldSeeder> WorldSeeder;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Campaign", meta = (AllowPrivateAccess = "true")) TObjectPtr<URANDAct3Director> Act3Director;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "News", meta = (AllowPrivateAccess = "true")) TObjectPtr<URANDNewsTicker> NewsTicker;
 };
