@@ -10,12 +10,10 @@ class URANDTimeComponent;
 class URANDSaveGameManager;
 class URANDMissionManager;
 class URANDWeatherComponent;
+class URANDCampaignDirector;
+class URANDWantedResponseComponent;
+class URANDSARSComponent;
 
-/**
- * ARANDGameMode — default rules for RAND. Spawns André (ARANDCharacter) as
- * the player pawn. Single-player; expands later with save/load and the
- * economy/heat systems described in the GDD.
- */
 UCLASS()
 class RAND_API ARANDGameMode : public AGameModeBase
 {
@@ -36,20 +34,34 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Weather")
 	URANDWeatherComponent* GetWeatherComponent() const { return WeatherComponent; }
 
+	UFUNCTION(BlueprintPure, Category = "Campaign")
+	URANDCampaignDirector* GetCampaignDirector() const { return CampaignDirector; }
+
+	UFUNCTION(BlueprintPure, Category = "Wanted")
+	URANDWantedResponseComponent* GetWantedResponse() const { return WantedResponse; }
+
+	UFUNCTION(BlueprintPure, Category = "SARS")
+	URANDSARSComponent* GetSARSComponent() const { return SARSComponent; }
+
 private:
-	/** Authoritative in-game clock for the session. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Time", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<URANDTimeComponent> TimeComponent;
 
-	/** Save/load for the session (F5 + hourly auto-save). */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Save", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<URANDSaveGameManager> SaveManager;
 
-	/** Mission registry + flow for the session. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mission", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<URANDMissionManager> MissionManager;
 
-	/** Weather + load shedding, driven off the game clock. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weather", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<URANDWeatherComponent> WeatherComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Campaign", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<URANDCampaignDirector> CampaignDirector;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Wanted", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<URANDWantedResponseComponent> WantedResponse;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "SARS", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<URANDSARSComponent> SARSComponent;
 };
