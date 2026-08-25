@@ -16,16 +16,10 @@ class UHealthComponent;
 class UWantedComponent;
 class URANDEconomyComponent;
 class URANDBusinessManager;
+class URANDCareerComponent;
+class URANDReputationComponent;
+class URANDCombatComponent;
 
-/**
- * ARANDCharacter — André Venter, the player-controlled protagonist.
- *
- * Third-person controller built on Enhanced Input. Movement is deliberately
- * weighty (GTA IV reference in the GDD): a measured walk speed with a sprint
- * modifier rather than twitchy arcade movement. Input bindings are authored
- * entirely in C++ so the project compiles and plays without any editor-side
- * asset setup; designers can later override the mapping context as a data asset.
- */
 UCLASS()
 class RAND_API ARANDCharacter : public ACharacter
 {
@@ -34,7 +28,6 @@ class RAND_API ARANDCharacter : public ACharacter
 public:
 	ARANDCharacter();
 
-	/** Accessors for the gameplay systems André owns. */
 	UFUNCTION(BlueprintPure, Category = "Wanted")
 	UWantedComponent* GetWantedComponent() const { return WantedComponent; }
 
@@ -50,9 +43,15 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Business")
 	URANDBusinessManager* GetBusinessManager() const { return BusinessManager; }
 
-	// --- Story flags --------------------------------------------------------
+	UFUNCTION(BlueprintPure, Category = "Career")
+	URANDCareerComponent* GetCareerComponent() const { return CareerComponent; }
 
-	/** Set by Mission 1 (The Consultation): did André take the tender bribe? */
+	UFUNCTION(BlueprintPure, Category = "Reputation")
+	URANDReputationComponent* GetReputationComponent() const { return ReputationComponent; }
+
+	UFUNCTION(BlueprintPure, Category = "Combat")
+	URANDCombatComponent* GetCombatComponent() const { return CombatComponent; }
+
 	UPROPERTY(BlueprintReadWrite, Category = "Story")
 	bool bAcceptedBribe = false;
 
@@ -60,19 +59,12 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
-	// --- Camera ---------------------------------------------------------
-
-	/** Boom positioning the camera behind André. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USpringArmComponent> CameraBoom;
 
-	/** Follow camera at the end of the boom. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UCameraComponent> FollowCamera;
 
-	// --- Enhanced Input -------------------------------------------------
-
-	/** Default mapping context applied when this character is possessed. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputMappingContext> DefaultMappingContext;
 
@@ -88,17 +80,20 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> SprintAction;
 
-	// --- Movement tuning ------------------------------------------------
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> FireAction;
 
-	/** Ground speed for a normal walk (cm/s). */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> GoDarkAction;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> FileTaxesAction;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement", meta = (AllowPrivateAccess = "true"))
 	float WalkSpeed = 400.0f;
 
-	/** Ground speed while sprinting (cm/s). */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement", meta = (AllowPrivateAccess = "true"))
 	float SprintSpeed = 650.0f;
-
-	// --- Systems --------------------------------------------------------
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Interaction", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInteractionComponent> InteractionComponent;
@@ -115,14 +110,23 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Business", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<URANDBusinessManager> BusinessManager;
 
-	// --- Input handlers -------------------------------------------------
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Career", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<URANDCareerComponent> CareerComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Reputation", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<URANDReputationComponent> ReputationComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<URANDCombatComponent> CombatComponent;
 
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
 	void StartSprint(const FInputActionValue& Value);
 	void StopSprint(const FInputActionValue& Value);
+	void HandleFire(const FInputActionValue& Value);
+	void HandleGoDark(const FInputActionValue& Value);
+	void HandleFileTaxes(const FInputActionValue& Value);
 
 private:
-	/** Builds the key->action mappings on the default mapping context. */
 	void ConfigureInputMappings();
 };
