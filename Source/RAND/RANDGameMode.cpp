@@ -10,6 +10,8 @@
 #include "RANDCampaignDirector.h"
 #include "RANDWantedResponseComponent.h"
 #include "RANDSARSComponent.h"
+#include "RANDCheatComponent.h"
+#include "RANDSideHustleComponent.h"
 
 ARANDGameMode::ARANDGameMode()
 {
@@ -22,4 +24,6 @@ ARANDGameMode::ARANDGameMode()
 	CampaignDirector = CreateDefaultSubobject<URANDCampaignDirector>(TEXT("CampaignDirector"));
 	WantedResponse   = CreateDefaultSubobject<URANDWantedResponseComponent>(TEXT("WantedResponse"));
 	SARSComponent    = CreateDefaultSubobject<URANDSARSComponent>(TEXT("SARSComponent"));
+	CheatComponent   = CreateDefaultSubobject<URANDCheatComponent>(TEXT("CheatComponent"));
+	SideHustle       = CreateDefaultSubobject<URANDSideHustleComponent>(TEXT("SideHustle"));
 }

@@ -13,6 +13,8 @@ class URANDWeatherComponent;
 class URANDCampaignDirector;
 class URANDWantedResponseComponent;
 class URANDSARSComponent;
+class URANDCheatComponent;
+class URANDSideHustleComponent;
 
 UCLASS()
 class RAND_API ARANDGameMode : public AGameModeBase
@@ -43,6 +45,12 @@ public:
 	UFUNCTION(BlueprintPure, Category = "SARS")
 	URANDSARSComponent* GetSARSComponent() const { return SARSComponent; }
 
+	UFUNCTION(BlueprintPure, Category = "Debug")
+	URANDCheatComponent* GetCheatComponent() const { return CheatComponent; }
+
+	UFUNCTION(BlueprintPure, Category = "Jobs")
+	URANDSideHustleComponent* GetSideHustle() const { return SideHustle; }
+
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Time", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<URANDTimeComponent> TimeComponent;
@@ -64,4 +72,10 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "SARS", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<URANDSARSComponent> SARSComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Debug", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<URANDCheatComponent> CheatComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Jobs", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<URANDSideHustleComponent> SideHustle;
 };
