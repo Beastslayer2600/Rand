@@ -15,6 +15,7 @@
 #include "RANDWorldSeeder.h"
 #include "RANDAct3Director.h"
 #include "RANDNewsTicker.h"
+#include "RANDAmbientSoundManager.h"
 
 ARANDGameMode::ARANDGameMode()
 {
@@ -32,4 +33,5 @@ ARANDGameMode::ARANDGameMode()
 	WorldSeeder      = CreateDefaultSubobject<URANDWorldSeeder>(TEXT("WorldSeeder"));
 	Act3Director     = CreateDefaultSubobject<URANDAct3Director>(TEXT("Act3Director"));
 	NewsTicker       = CreateDefaultSubobject<URANDNewsTicker>(TEXT("NewsTicker"));
+	AmbientSound     = CreateDefaultSubobject<URANDAmbientSoundManager>(TEXT("AmbientSound"));
 }
