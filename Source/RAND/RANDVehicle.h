@@ -9,6 +9,7 @@
 
 class UWantedComponent;
 class ARANDCharacter;
+class URANDRadioComponent;
 
 /**
  * ARANDVehicle — base class for every drivable vehicle in RAND.
@@ -49,10 +50,18 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Vehicle")
 	bool IsOccupied() const { return DriverCharacter != nullptr; }
 
+	/** The car radio; plays only while occupied. */
+	UFUNCTION(BlueprintPure, Category = "Radio")
+	URANDRadioComponent* GetRadioComponent() const { return RadioComponent; }
+
 protected:
 	/** Heat layer for the vehicle itself (e.g. plates flagged after a chase). */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Wanted")
 	TObjectPtr<UWantedComponent> WantedComponent;
+
+	/** In-car radio (stations cycle on R while driving). */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Radio")
+	TObjectPtr<URANDRadioComponent> RadioComponent;
 
 	/** Local offset from the vehicle origin to the driver-door drop point. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle")
@@ -77,6 +86,13 @@ private:
 	UPROPERTY()
 	TObjectPtr<class UInputAction> ExitAction;
 
+	/** R while driving — cycles radio stations (reload keeps R on foot). */
+	UPROPERTY()
+	TObjectPtr<class UInputAction> RadioAction;
+
 	/** Drops André out of the vehicle at the driver door and restores control. */
 	void ExitVehicle();
+
+	/** Bound to R in the vehicle context. */
+	void CycleRadioStation();
 };

@@ -32,6 +32,7 @@ public:
 protected:
 	virtual TSharedRef<SWidget> RebuildWidget() override;
 	virtual void NativeDestruct() override;
+	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
 	UPROPERTY() TObjectPtr<UProgressBar> HealthBar;
 	UPROPERTY() TObjectPtr<UTextBlock> HealthText;
@@ -67,5 +68,12 @@ private:
 
 	void UpdateMissionDisplay();
 	void UpdateStatusLine();
+
+	/** While driving, the prompt line shows the radio instead of interactions. */
+	void UpdateRadioLine();
+
 	void RefreshAll();
+
+	/** True on the frame the radio line owns the prompt, so it isn't fought over. */
+	bool bRadioLineActive = false;
 };

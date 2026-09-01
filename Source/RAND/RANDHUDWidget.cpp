@@ -10,6 +10,9 @@
 #include "RANDCombatComponent.h"
 #include "RANDMissionManager.h"
 #include "RANDMinimapWidget.h"
+#include "RANDVehicle.h"
+#include "RANDRadioComponent.h"
+#include "GameFramework/PlayerController.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
@@ -243,9 +246,44 @@ void URANDHUDWidget::HandleHeatChanged(EAgency Agency, EHeatLevel, EHeatLevel Ne
 	if (HeatLevelTexts.IsValidIndex(Idx) && HeatLevelTexts[Idx]) HeatLevelTexts[Idx]->SetText(HeatLevelToText(NewLevel));
 }
 
+void URANDHUDWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+{
+	Super::NativeTick(MyGeometry, InDeltaTime);
+	UpdateRadioLine();
+}
+
+void URANDHUDWidget::UpdateRadioLine()
+{
+	if (!InteractionText) return;
+
+	// While André is driving, the prompt line carries the radio instead.
+	ARANDVehicle* Vehicle = nullptr;
+	if (const APlayerController* PC = GetOwningPlayer())
+	{
+		Vehicle = Cast<ARANDVehicle>(PC->GetPawn());
+	}
+
+	URANDRadioComponent* Radio = Vehicle ? Vehicle->GetRadioComponent() : nullptr;
+	if (Radio)
+	{
+		bRadioLineActive = true;
+		InteractionText->SetText(FText::FromString(Radio->GetDisplayString()));
+		InteractionText->SetVisibility(ESlateVisibility::HitTestInvisible);
+		return;
+	}
+
+	if (bRadioLineActive)
+	{
+		// Just stepped out — hand the line back to the interaction prompt.
+		bRadioLineActive = false;
+		HandleTargetChanged(BoundInteraction.IsValid() ? BoundInteraction->GetCurrentTarget() : nullptr);
+	}
+}
+
 void URANDHUDWidget::HandleTargetChanged(AActor* NewTarget)
 {
 	if (!InteractionText) return;
+	if (bRadioLineActive) return; // Radio owns the line while driving.
 	if (NewTarget && BoundInteraction.IsValid())
 	{
 		InteractionText->SetText(BoundInteraction->GetPromptText());

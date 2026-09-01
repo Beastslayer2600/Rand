@@ -3,6 +3,7 @@
 #include "RANDVehicle.h"
 #include "RANDCharacter.h"
 #include "WantedComponent.h"
+#include "RANDRadioComponent.h"
 
 #include "Components/SkeletalMeshComponent.h"
 #include "GameFramework/Controller.h"
@@ -23,6 +24,11 @@ ARANDVehicle::ARANDVehicle()
 
 	ExitAction = CreateDefaultSubobject<UInputAction>(TEXT("IA_ExitVehicle"));
 	ExitAction->ValueType = EInputActionValueType::Boolean;
+
+	RadioAction = CreateDefaultSubobject<UInputAction>(TEXT("IA_CycleRadio"));
+	RadioAction->ValueType = EInputActionValueType::Boolean;
+
+	RadioComponent = CreateDefaultSubobject<URANDRadioComponent>(TEXT("RadioComponent"));
 }
 
 // --- IInteractable ----------------------------------------------------------
@@ -73,17 +79,26 @@ void ARANDVehicle::OnInteract_Implementation(AActor* Interactor)
 	// Possess the vehicle with André's controller.
 	EnteringController->Possess(this);
 
-	// Build the exit key mapping for whoever is now driving.
+	// Build the in-car key mappings for whoever is now driving. R is bound here
+	// rather than globally so it cycles radio stations while driving and stays
+	// the reload key on foot; the higher context priority wins while seated.
 	VehicleMappingContext->UnmapAll();
 	VehicleMappingContext->MapKey(ExitAction, EKeys::F);
+	VehicleMappingContext->MapKey(RadioAction, EKeys::R);
 
 	if (APlayerController* PC = Cast<APlayerController>(EnteringController))
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
 			ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer()))
 		{
-			Subsystem->AddMappingContext(VehicleMappingContext, 0);
+			Subsystem->AddMappingContext(VehicleMappingContext, 5);
 		}
+	}
+
+	// The radio only runs while there's a driver.
+	if (RadioComponent)
+	{
+		RadioComponent->SetPlaying(true);
 	}
 }
 
@@ -96,6 +111,15 @@ void ARANDVehicle::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 	if (UEnhancedInputComponent* EIC = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
 		EIC->BindAction(ExitAction, ETriggerEvent::Started, this, &ARANDVehicle::ExitVehicle);
+		EIC->BindAction(RadioAction, ETriggerEvent::Started, this, &ARANDVehicle::CycleRadioStation);
+	}
+}
+
+void ARANDVehicle::CycleRadioStation()
+{
+	if (RadioComponent)
+	{
+		RadioComponent->CycleStation();
 	}
 }
 
@@ -107,6 +131,12 @@ void ARANDVehicle::ExitVehicle()
 	}
 
 	AController* ExitingController = SavedController;
+
+	// Radio goes quiet as André gets out.
+	if (RadioComponent)
+	{
+		RadioComponent->SetPlaying(false);
+	}
 
 	// Tear down the exit mapping context.
 	if (APlayerController* PC = Cast<APlayerController>(ExitingController))
