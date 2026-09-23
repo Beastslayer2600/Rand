@@ -12,6 +12,7 @@
 #include "RANDMinimapWidget.h"
 #include "RANDVehicle.h"
 #include "RANDRadioComponent.h"
+#include "RANDTenderBoard.h"
 #include "GameFramework/PlayerController.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/CanvasPanel.h"
@@ -341,7 +342,13 @@ void URANDHUDWidget::UpdateStatusLine()
 		}
 	}
 	const bool bArmed = Player->GetCombatComponent() && Player->GetCombatComponent()->IsArmed();
-	StatusText->SetText(FText::FromString(FString::Printf(TEXT("R%.0f   %s   %s"), Cash, *Stage, bArmed ? TEXT("armed") : TEXT("unarmed"))));
+	FString Line = FString::Printf(TEXT("R%.0f   %s   %s"), Cash, *Stage, bArmed ? TEXT("armed") : TEXT("unarmed"));
+	if (URANDTenderBoard* Tenders = URANDTenderBoard::Get(this))
+	{
+		Line += FString::Printf(TEXT("   CIDB %d  BEE L%d"), Tenders->GetCIDBGrade(), Tenders->GetBEELevel());
+		if (Tenders->IsBlacklisted()) Line += FString::Printf(TEXT("  BLACKLISTED (%dd)"), Tenders->GetBlacklistDays());
+	}
+	StatusText->SetText(FText::FromString(Line));
 }
 
 void URANDHUDWidget::UpdateMissionDisplay()

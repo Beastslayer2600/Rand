@@ -12,6 +12,8 @@
 #include "RANDCombatComponent.h"
 #include "RANDInventoryComponent.h"
 #include "RANDSARSComponent.h"
+#include "RANDFactionComponent.h"
+#include "RANDTenderBoard.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerController.h"
 #include "Engine/World.h"
@@ -107,6 +109,16 @@ void URANDSaveGameManager::SaveGame()
 		Save->InflationMultiplier = SARS->GetInflationMultiplier();
 		Save->bSARSInvestigation = SARS->IsInvestigationActive();
 	}
+	if (URANDFactionComponent* Factions = URANDFactionComponent::Get(this)) Factions->CopyStandings(Save->FactionStandings);
+	if (URANDTenderBoard* Tenders = URANDTenderBoard::Get(this))
+	{
+		Save->CIDBGrade = Tenders->GetCIDBGrade();
+		Save->BEELevel = Tenders->GetBaseBEELevel();
+		Save->ContractsWon = Tenders->GetContractsWon();
+		Save->bHasFront = Tenders->HasFront();
+		Save->BlacklistDays = Tenders->GetBlacklistDays();
+		Save->WhistleblowerRisk = Tenders->GetWhistleblowerRisk();
+	}
 	if (URANDTimeComponent* Clock = URANDTimeComponent::Get(this))
 	{
 		Save->Day = Clock->GetCurrentDay();
@@ -142,6 +154,12 @@ void URANDSaveGameManager::LoadGame()
 	if (URANDSARSComponent* SARS = URANDSARSComponent::Get(this))
 	{
 		SARS->LoadState(Save->InflationMultiplier, Save->bSARSInvestigation);
+	}
+	if (URANDFactionComponent* Factions = URANDFactionComponent::Get(this)) Factions->LoadStandings(Save->FactionStandings);
+	if (URANDTenderBoard* Tenders = URANDTenderBoard::Get(this))
+	{
+		Tenders->LoadState(Save->CIDBGrade, Save->BEELevel, Save->ContractsWon, Save->bHasFront,
+			Save->BlacklistDays, Save->WhistleblowerRisk);
 	}
 	if (URANDTimeComponent* Clock = URANDTimeComponent::Get(this))
 	{

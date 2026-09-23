@@ -29,6 +29,7 @@ private:
 	UFUNCTION() void ClearHeat();
 	UFUNCTION() void PhoneChoice1();
 	UFUNCTION() void PhoneChoice2();
+	UFUNCTION() void PhoneChoice3();
 	UFUNCTION() void ReloadWeapon();
 	void PickPhoneOption(int32 Index);
 
@@ -39,6 +40,7 @@ private:
 	UPROPERTY() TObjectPtr<UInputAction> HeatAction;
 	UPROPERTY() TObjectPtr<UInputAction> Choice1Action;
 	UPROPERTY() TObjectPtr<UInputAction> Choice2Action;
+	UPROPERTY() TObjectPtr<UInputAction> Choice3Action;
 	UPROPERTY() TObjectPtr<UInputAction> ReloadAction;
 
 	FTimerHandle InputSetupTimer;

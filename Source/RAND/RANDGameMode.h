@@ -19,6 +19,8 @@ class URANDWorldSeeder;
 class URANDAct3Director;
 class URANDNewsTicker;
 class URANDAmbientSoundManager;
+class URANDFactionComponent;
+class URANDTenderBoard;
 
 UCLASS()
 class RAND_API ARANDGameMode : public AGameModeBase
@@ -38,6 +40,8 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Debug") URANDCheatComponent* GetCheatComponent() const { return CheatComponent; }
 	UFUNCTION(BlueprintPure, Category = "Jobs") URANDSideHustleComponent* GetSideHustle() const { return SideHustle; }
 	UFUNCTION(BlueprintPure, Category = "Ambience") URANDAmbientSoundManager* GetAmbientSound() const { return AmbientSound; }
+	UFUNCTION(BlueprintPure, Category = "Factions") URANDFactionComponent* GetFactions() const { return Factions; }
+	UFUNCTION(BlueprintPure, Category = "Tender") URANDTenderBoard* GetTenderBoard() const { return TenderBoard; }
 
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Time", meta = (AllowPrivateAccess = "true")) TObjectPtr<URANDTimeComponent> TimeComponent;
@@ -53,4 +57,6 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Campaign", meta = (AllowPrivateAccess = "true")) TObjectPtr<URANDAct3Director> Act3Director;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "News", meta = (AllowPrivateAccess = "true")) TObjectPtr<URANDNewsTicker> NewsTicker;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ambience", meta = (AllowPrivateAccess = "true")) TObjectPtr<URANDAmbientSoundManager> AmbientSound;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Factions", meta = (AllowPrivateAccess = "true")) TObjectPtr<URANDFactionComponent> Factions;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Tender", meta = (AllowPrivateAccess = "true")) TObjectPtr<URANDTenderBoard> TenderBoard;
 };

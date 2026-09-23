@@ -174,6 +174,18 @@ void URANDPhoneWidget::ChooseOptionByIndex(int32 OptionIndex)
 	SelectOption(OptionIndex);
 }
 
+void URANDPhoneWidget::WithdrawChoice(FName ActionId)
+{
+	if (!Messages.IsValidIndex(PendingOptionMessage)) return;
+	FRANDMessage& Pending = Messages[PendingOptionMessage];
+	const bool bOurs = Pending.Options.ContainsByPredicate(
+		[ActionId](const FRANDMessageOption& Option) { return Option.ActionId == ActionId; });
+	if (!bOurs) return;
+	Pending.Options.Reset();
+	PendingOptionMessage = INDEX_NONE;
+	RebuildOptions();
+}
+
 void URANDPhoneWidget::RebuildMessageList()
 {
 	if (!MessageList) return;

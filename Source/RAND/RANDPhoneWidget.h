@@ -65,6 +65,14 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Phone")
 	int32 GetUnreadCount() const;
 
+	/** True while a message is still waiting on a reply; new offers hold off so they don't bury it. */
+	UFUNCTION(BlueprintPure, Category = "Phone")
+	bool HasPendingChoice() const { return Messages.IsValidIndex(PendingOptionMessage); }
+
+	/** Takes the reply buttons off the pending message if one of them is ActionId (an offer that lapsed). */
+	UFUNCTION(BlueprintCallable, Category = "Phone")
+	void WithdrawChoice(FName ActionId);
+
 	UFUNCTION(BlueprintCallable, Category = "Phone")
 	void OpenPhone();
 

@@ -16,6 +16,8 @@
 #include "RANDAct3Director.h"
 #include "RANDNewsTicker.h"
 #include "RANDAmbientSoundManager.h"
+#include "RANDFactionComponent.h"
+#include "RANDTenderBoard.h"
 
 ARANDGameMode::ARANDGameMode()
 {
@@ -34,4 +36,6 @@ ARANDGameMode::ARANDGameMode()
 	Act3Director     = CreateDefaultSubobject<URANDAct3Director>(TEXT("Act3Director"));
 	NewsTicker       = CreateDefaultSubobject<URANDNewsTicker>(TEXT("NewsTicker"));
 	AmbientSound     = CreateDefaultSubobject<URANDAmbientSoundManager>(TEXT("AmbientSound"));
+	Factions         = CreateDefaultSubobject<URANDFactionComponent>(TEXT("Factions"));
+	TenderBoard      = CreateDefaultSubobject<URANDTenderBoard>(TEXT("TenderBoard"));
 }
