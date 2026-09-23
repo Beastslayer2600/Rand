@@ -54,6 +54,7 @@ void URANDCheatComponent::SetupInput()
 		HeatAction = MakeBool(TEXT("IA_ClearHeat"));
 		Choice1Action = MakeBool(TEXT("IA_Phone1"));
 		Choice2Action = MakeBool(TEXT("IA_Phone2"));
+		Choice3Action = MakeBool(TEXT("IA_Phone3"));
 		ReloadAction = MakeBool(TEXT("IA_Reload"));
 
 		CheatMappingContext->MapKey(CashAction, EKeys::F8);
@@ -62,6 +63,7 @@ void URANDCheatComponent::SetupInput()
 		CheatMappingContext->MapKey(HeatAction, EKeys::F12);
 		CheatMappingContext->MapKey(Choice1Action, EKeys::One);
 		CheatMappingContext->MapKey(Choice2Action, EKeys::Two);
+		CheatMappingContext->MapKey(Choice3Action, EKeys::Three);
 		CheatMappingContext->MapKey(ReloadAction, EKeys::R);
 
 		Subsystem->AddMappingContext(CheatMappingContext, 4);
@@ -74,6 +76,7 @@ void URANDCheatComponent::SetupInput()
 			EIC->BindAction(HeatAction, ETriggerEvent::Started, this, &URANDCheatComponent::ClearHeat);
 			EIC->BindAction(Choice1Action, ETriggerEvent::Started, this, &URANDCheatComponent::PhoneChoice1);
 			EIC->BindAction(Choice2Action, ETriggerEvent::Started, this, &URANDCheatComponent::PhoneChoice2);
+			EIC->BindAction(Choice3Action, ETriggerEvent::Started, this, &URANDCheatComponent::PhoneChoice3);
 			EIC->BindAction(ReloadAction, ETriggerEvent::Started, this, &URANDCheatComponent::ReloadWeapon);
 		}
 	}
@@ -127,6 +130,7 @@ void URANDCheatComponent::ClearHeat()
 
 void URANDCheatComponent::PhoneChoice1() { PickPhoneOption(0); }
 void URANDCheatComponent::PhoneChoice2() { PickPhoneOption(1); }
+void URANDCheatComponent::PhoneChoice3() { PickPhoneOption(2); }
 
 void URANDCheatComponent::PickPhoneOption(int32 Index)
 {

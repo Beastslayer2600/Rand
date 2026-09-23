@@ -36,4 +36,11 @@ public:
 	UPROPERTY() float InflationMultiplier = 1.0f;
 	UPROPERTY() bool bSARSInvestigation = false;
 	UPROPERTY() TArray<ERANDItem> Inventory;
+	UPROPERTY() TArray<float> FactionStandings;
+	UPROPERTY() int32 CIDBGrade = 2;
+	UPROPERTY() int32 BEELevel = 6;
+	UPROPERTY() int32 ContractsWon = 0;
+	UPROPERTY() bool bHasFront = false;
+	UPROPERTY() int32 BlacklistDays = 0;
+	UPROPERTY() float WhistleblowerRisk = 0.0f;
 };

@@ -61,7 +61,7 @@ void URANDSideHustleComponent::HandleHourPassed(int32, int32)
 void URANDSideHustleComponent::OfferJob()
 {
 	URANDPhoneWidget* Phone = URANDPhoneWidget::GetPhone(this);
-	if (!Phone) return;
+	if (!Phone || Phone->HasPendingChoice()) return; // Don't bury a reply the player still owes.
 
 	HoursSinceOffer = 0;
 	bOfferOpen = true;
